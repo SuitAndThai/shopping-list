@@ -4,10 +4,23 @@
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
         >
-    <TextView
+    <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Hello World, MyActivity"
-            />
+            android:layout_margin="10dip"
+            android:text="@string/lists"
+            android:id="@+id/lists_button"/>
+    <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dip"
+            android:text="@string/scan_barcode"
+            android:id="@+id/barcode_button"/>
+    <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dip"
+            android:text="@string/transfer_receive"
+            android:id="@+id/receive_transfer_button"/>
 </LinearLayout>
 

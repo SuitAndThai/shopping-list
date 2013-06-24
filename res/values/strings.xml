@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">shopping-list</string>
+    <string name="app_name">Snow\'s Shopping List</string>
+    <string name="lists">Lists</string>
+    <string name="scan_barcode">Scan Barcode</string>
+    <string name="transfer_receive">Transfer / Receive</string>
 </resources>
