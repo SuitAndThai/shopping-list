@@ -9,5 +9,18 @@
                   android:id="@+id/viewpager"
                   android:layout_width="fill_parent"
                   android:layout_height="fill_parent" />
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/item_not_found"
+            android:id="@+id/textView" android:layout_centerHorizontal="true" android:layout_alignParentTop="true"
+            android:layout_marginTop="56dp"/>
+    <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/retry"
+            android:id="@+id/retry_button"
+            android:layout_margin="10dip"
+            android:layout_centerHorizontal="true" android:layout_below="@+id/textView"/>
 
 </RelativeLayout>
