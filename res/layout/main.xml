@@ -21,6 +21,6 @@
             android:layout_height="wrap_content"
             android:layout_margin="10dip"
             android:text="@string/transfer_receive"
-            android:id="@+id/receive_transfer_button"/>
+            android:id="@+id/transfer_receive_button"/>
 </LinearLayout>
 
