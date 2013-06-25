@@ -3,5 +3,5 @@
     <string name="app_name">Snow\'s Shopping List</string>
     <string name="lists">Lists</string>
     <string name="scan_barcode">Scan Barcode</string>
-    <string name="transfer_receive">Transfer / Receive</string>
+    <string name="transfer_receive">Transfer / Receive</string><string name="item_not_found">Item not found.</string><string name="retry">Retry</string><string name="scanned_item">Orange Juice</string><string name="add_to_list">Add to list</string><string name="buy_online">Buy online</string><string name="transfer">Transfer</string><string name="receive">Receive</string><string name="waiting">Waiting...</string><string name="cancel">Cancel</string>
 </resources>
