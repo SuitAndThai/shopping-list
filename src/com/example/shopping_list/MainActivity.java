@@ -20,12 +20,11 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
 
         final Button lists_button = (Button) findViewById(R.id.lists_button);
-
+        Log.d(mt, "First Screen");
         lists_button.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
                 // start a new intent
-                Log.d(mt, "First Screen");
                 Intent i = new Intent(getApplicationContext(), ListsActivity.class);
                 startActivityForResult(i, LISTS_REQUEST);
         }
@@ -36,10 +35,5 @@ public class MainActivity extends Activity {
         if (resultCode == Activity.RESULT_OK) {
                 Log.d(mt, "Returned successfully from Lists");
         }
-    }
-
-    @Override
-    public void onPause() {
-
     }
 }
