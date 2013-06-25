@@ -1,9 +1,7 @@
 package com.example.shopping_list;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -11,10 +9,10 @@ import android.widget.Button;
  * Created with IntelliJ IDEA.
  * User: rthai
  * Date: 6/25/13
- * Time: 10:39 AM
+ * Time: 1:11 PM
  * To change this template use File | Settings | File Templates.
  */
-public class TransRecvActivity extends Activity {
+public class ScanSuccessActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
