@@ -4,15 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ShareActionProvider;
 
-public class MyActivity extends Activity {
+public class MainActivity extends Activity {
     public static String mt = "main_tag";
+    public static int LISTS_REQUEST = 10;
 
     /**
      * Called when the activity is first created.
@@ -28,16 +25,17 @@ public class MyActivity extends Activity {
 
             public void onClick(View v) {
                 // start a new intent
-                Intent i = new Intent(getApplicationContext(), lists.class);
-
-                Log.e(mt, "First Screen");
-                startActivity(i);
+                Log.d(mt, "First Screen");
+                Intent i = new Intent(getApplicationContext(), ListsActivity.class);
+                startActivityForResult(i, LISTS_REQUEST);
         }
         });
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+                Log.d(mt, "Returned successfully from Lists");
+        }
     }
 
     @Override
