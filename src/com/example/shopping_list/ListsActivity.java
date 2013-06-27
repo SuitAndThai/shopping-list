@@ -1,15 +1,15 @@
 package com.example.shopping_list;
 
-import android.support.v4.app.Fragment;
-import android.content.Intent;
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.ViewPager;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.ShareActionProvider;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -19,51 +19,87 @@ import java.util.List;
  * Time: 11:25 AM
  * To change this template use File | Settings | File Templates.
  */
-public class ListsActivity extends FragmentActivity {
-    private static final int NUM_PAGES = 3;
+public class ListsActivity extends Activity {
 
-    private ShareActionProvider mShareActionProvider;
-    private MyPageAdapter mPageAdapter;
-
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.lists);
-        List<Fragment> fragments = getFragments();
-        mPageAdapter = new MyPageAdapter(getSupportFragmentManager(), fragments);
-        ViewPager pager =
-                (ViewPager)findViewById(R.id.viewpager);
-        pager.setAdapter(mPageAdapter);
-    }
-
+    public static final String EXTRA_MESSAGE = "Lists";
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate menu resource file.
-        getMenuInflater().inflate(R.menu.lists_menu, menu);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.lists_activity);
 
-        // Locate MenuItem with ShareActionProvider
-        MenuItem item = menu.findItem(R.id.menu_item_share);
+        final ListView listview = (ListView) findViewById(R.id.listview);
+        String[] values = new String[] { "Android", "iPhone", "WindowsMobile",
+                "Blackberry", "WebOS", "Ubuntu", "Windows7", "Max OS X",
+                "Linux", "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux",
+                "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux", "OS/2",
+                "Android", "iPhone", "WindowsMobile" };
 
-        // Fetch and store ShareActionProvider
-        mShareActionProvider = (ShareActionProvider) item.getActionProvider();
-
-        // Return true to display menu
-        return true;
-    }
-
-    // Call to update the share intent
-    private void setShareIntent(Intent shareIntent) {
-        if (mShareActionProvider != null) {
-            mShareActionProvider.setShareIntent(shareIntent);
+        final ArrayList<String> list = new ArrayList<String>();
+        for (int i = 0; i < values.length; ++i) {
+            list.add(values[i]);
         }
+        final StableArrayAdapter adapter = new StableArrayAdapter(this,android.R.layout.simple_list_item_1, list);
+        listview.setAdapter(adapter);
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, final View view,
+                                    int position, long id) {
+                final String item = (String) parent.getItemAtPosition(position);
+                view.animate().setDuration(2000).alpha((float) 0.5)
+                        .withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                adapter.notifyDataSetChanged();
+                                view.setAlpha((float) 0.5);
+                            }
+                        });
+            }
+        });
     }
 
-    private List<Fragment> getFragments(){
-        List<Fragment> fList = new ArrayList<Fragment>();
+    private class StableArrayAdapter extends ArrayAdapter<String> {
 
-        fList.add(MyFragment.newInstance("Fragment 1"));
-        fList.add(MyFragment.newInstance("Fragment 2"));
-        fList.add(MyFragment.newInstance("Fragment 3"));
+        HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
 
-        return fList;
+        public StableArrayAdapter(Context context, int textViewResourceId,
+                                  List<String> objects) {
+            super(context, textViewResourceId, objects);
+            for (int i = 0; i < objects.size(); ++i) {
+                mIdMap.put(objects.get(i), i);
+            }
+        }
+
+        @Override
+        public long getItemId(int position) {
+            String item = getItem(position);
+            return mIdMap.get(item);
+        }
+
+        @Override
+        public boolean hasStableIds() {
+            return true;
+        }
+
     }
+
 }
+
+
+
+
+    /*lists_button.setOnClickListener(new View.OnClickListener() {
+
+        public void onClick(View v) {
+            Intent i = new Intent(getApplicationContext(), ListsActivity.class);
+            Log.d("main", "before result");
+            startActivityForResult(i, LISTS_REQUEST);
+        }
+    };     */
+
+
+
+
+
+
