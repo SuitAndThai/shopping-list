@@ -10,10 +10,11 @@ import android.widget.Button;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    public static String mt = "main_tag";
+    public static String mt = "main-tag";
     public static int LISTS_REQUEST = 10000;
     public static int BARCODE_REQUEST = 10001;
     public static int XFER_REQUEST = 10002;
+    public static int SCAN_SUCCESS_REQUEST = 10003;
 
     /**
      * Called when the activity is first created.
@@ -58,8 +59,7 @@ public class MainActivity extends Activity {
             } else if (resultCode == RESULT_CANCELED) {
                 Log.d(mt, "Result Cancelled");
             }
-        }
-        else if (requestCode == BARCODE_REQUEST) {
+        } else if (requestCode == BARCODE_REQUEST) {
             if (resultCode == RESULT_OK) {
                 Log.d(mt, "Result OK");
                 String contents = intent.getStringExtra("SCAN_RESULT");
@@ -69,19 +69,22 @@ public class MainActivity extends Activity {
                 toast.setGravity(Gravity.TOP, 25, 400);
                 toast.show();
                 // Handle successful scan
+
+                Intent i = new Intent(getApplicationContext(), ScanSuccessActivity.class);
+                i.putExtra("CONTENT", contents);
+                i.putExtra("FORMAT", format);
+                startActivityForResult(i, SCAN_SUCCESS_REQUEST);
             } else if (resultCode == RESULT_CANCELED) {
                 Log.d(mt, "Result Cancelled");
             }
-        }
-        else if (requestCode == XFER_REQUEST) {
+        } else if (requestCode == XFER_REQUEST) {
             if (resultCode == RESULT_OK) {
                 Log.d(mt, "Result OK");
             } else if (resultCode == RESULT_CANCELED) {
                 Log.d(mt, "Result Cancelled");
             }
-        }
-        else {
-               Log.d(mt, "Unknown request code " + requestCode);
+        } else {
+            Log.d(mt, "Unknown request code " + requestCode);
         }
     }
 }
