@@ -25,7 +25,8 @@ public class ListsActivity extends Activity {
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {                                                             SQLiteHelper helper = new SQLiteHelper(this);
+    protected void onCreate(Bundle savedInstanceState) {
+        SQLiteHelper helper = new SQLiteHelper(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lists_activity);
