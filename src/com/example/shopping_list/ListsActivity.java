@@ -1,11 +1,10 @@
 package com.example.shopping_list;
 
 import android.app.Activity;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.view.View;
+import android.widget.*;
 
 import java.util.ArrayList;
 
@@ -89,6 +88,42 @@ public class ListsActivity extends Activity {
         // TODO: connect the database to the listview
         // http://www.mysamplecode.com/2012/07/android-listview-cursoradapter-sqlite.html
 
-        // Cursor cursor = mdbHelper.fetchAllItems();
+        ShoppingList list = mdbHelper.getList(order);
+        Cursor cursor = mdbHelper.fetchAllItems(list);
+
+        String[] columns = new String[] {DBConstants.ItemsCols.NAME};
+
+        int[] to = new int[] {R.id.listview};
+
+        // create the adapter using the cursor pointing to the desired data
+        //as well as the layout information
+        dataAdapter = new SimpleCursorAdapter(
+                this, R.layout.lists_activity,
+                cursor,
+                columns,
+                to,
+                0);
+
+        ListView listView = (ListView) findViewById(R.id.listview);
+        // Assign adapter to ListView
+        listView.setAdapter(dataAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, final View view,
+                                    int position, long id) {
+                final String item = (String) parent.getItemAtPosition(position);
+                view.animate().setDuration(2000).alpha((float) 0.5)
+                        .withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                dataAdapter.notifyDataSetChanged();
+                                view.setAlpha((float) 0.5);
+                            }
+                        });
+            }
+        });
+
     }
+
 }
