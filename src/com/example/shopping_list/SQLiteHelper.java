@@ -134,8 +134,50 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    // TODO: implement list ordering
-    public void orderList(ShoppingList list) {
+    public void orderLists() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
+                DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.IS_FAVORITE)}
+                , null, null, null);
+
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        ArrayList<ShoppingList> shoppingLists = new ArrayList<ShoppingList>();
+        while (cursor.moveToNext()) {
+            ShoppingList list = new ShoppingList();
+            list.id = cursor.getInt(0);
+            list.title = cursor.getString(1);
+            list.favorite = cursor.getInt(2);
+            list.order = cursor.getInt(3);
+            shoppingLists.add(list);
+        }
+
+        SortedMap<String, ShoppingList> favoriteLists = new TreeMap<String, ShoppingList>();
+        SortedMap<String, ShoppingList> notFavoriteLists = new TreeMap<String, ShoppingList>();
+        for (ShoppingList list : shoppingLists) {
+            if (list.favorite == ShoppingList.IS_FAVORITE) {
+                favoriteLists.put(list.title, list);
+            } else {
+                notFavoriteLists.put(list.title, list);
+            }
+        }
+
+        int i = 0;
+        SortedSet<String> favoriteKeys = new TreeSet<String>(favoriteLists.keySet());
+        for (String title : favoriteKeys) {
+            favoriteLists.get(title).order = i;
+            i++;
+            updateList(favoriteLists.get(title));
+        }
+
+        SortedSet<String> notFavoriteKeys = new TreeSet<String>(notFavoriteLists.keySet());
+        for (String title : notFavoriteKeys) {
+            notFavoriteLists.get(title).order = i;
+            i++;
+            updateList(notFavoriteLists.get(title));
+        }
 
     }
 
@@ -211,4 +253,25 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
                 new String[]{String.valueOf(list.id)});
     }
+
+
+    public ShoppingList getList(int order){
+        // TODO: get the list object
+        return null;
+    }
+
+    public int updateList(ShoppingList list) {
+        SQLiteDatabase db = open();
+        ContentValues values = new ContentValues();
+
+        values.put(DBConstants.ShoppingListsCols._ID, list.id);
+        values.put(DBConstants.ShoppingListsCols.TITLE, list.title);
+        values.put(DBConstants.ShoppingListsCols.IS_FAVORITE, list.favorite);
+        values.put(DBConstants.ShoppingListsCols.ORDER, list.order);
+
+        // updating row
+        return db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
+                new String[]{String.valueOf(list.id)});
+    }
+
 }

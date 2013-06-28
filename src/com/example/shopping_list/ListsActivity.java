@@ -1,15 +1,13 @@
 package com.example.shopping_list;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -37,7 +35,7 @@ public class ListsActivity extends Activity {
         mdbHelper.open();
 
         //Generate ListView from SQLite Database
-        displayListView();
+        displayListView(0);
 
         final ListView listview = (ListView) findViewById(R.id.listview);
         final Button addButton = (Button) findViewById(R.id.add_button);
@@ -52,43 +50,44 @@ public class ListsActivity extends Activity {
             list.add(values[i]);
         }
 
-        final StableArrayAdapter adapter = new StableArrayAdapter(this, android.R.layout.simple_list_item_1, list);
-        listview.setAdapter(adapter);
-
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, final View view,
-                                    int position, long id) {
-                final String item = (String) parent.getItemAtPosition(position);
-                view.animate().setDuration(2000).alpha((float) 0.5)
-                        .withEndAction(new Runnable() {
-                            @Override
-                            public void run() {
-                                adapter.notifyDataSetChanged();
-                                view.setAlpha((float) 0.5);
-                            }
-                        });
-            }
-        });
-
-        addButton.setOnClickListener(new View.OnClickListener() {
-
-            public void onClick(View v) {
-                String newItem = addEditText.getText().toString();
-
-                Log.d("ListActivity", newItem);
-                adapter.add(newItem);
-                adapter.notifyDataSetChanged();
-            }
-        });
+//        final StableArrayAdapter adapter = new StableArrayAdapter(this, android.R.layout.simple_list_item_1, list);
+//        listview.setAdapter(adapter);
+//
+//        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, final View view,
+//                                    int position, long id) {
+//                final String item = (String) parent.getItemAtPosition(position);
+//                view.animate().setDuration(2000).alpha((float) 0.5)
+//                        .withEndAction(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                adapter.notifyDataSetChanged();
+//                                view.setAlpha((float) 0.5);
+//                            }
+//                        });
+//            }
+//        });
+//
+//        addButton.setOnClickListener(new View.OnClickListener() {
+//
+//            public void onClick(View v) {
+//                String newItem = addEditText.getText().toString();
+//
+//                Log.d("ListActivity", newItem);
+//                adapter.add(newItem);
+//                adapter.notifyDataSetChanged();
+//            }
+//        });
 
 
     }
 
-    private void displayListView() {
+    private void displayListView(int order) {
         // TODO: connect the database to the listview
         // http://www.mysamplecode.com/2012/07/android-listview-cursoradapter-sqlite.html
-        //To change body of created methods use File | Settings | File Templates.
+
+        // Cursor cursor = mdbHelper.fetchAllItems();
     }
 }

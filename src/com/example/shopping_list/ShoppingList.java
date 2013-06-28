@@ -11,6 +11,13 @@ public class ShoppingList {
     public int id;
     public String title;
     public int favorite;
+    public int order;
+
+    public static int IS_FAVORITE = 1;
+
+    public ShoppingList() {
+
+    }
 
     public ShoppingList(String title){
 
