@@ -3,10 +3,9 @@ package com.example.shopping_list;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,23 +21,38 @@ import java.util.List;
 public class ListsActivity extends Activity {
 
     public static final String EXTRA_MESSAGE = "Lists";
+
+    private SimpleCursorAdapter dataAdapter;
+    private SQLiteHelper mdbHelper = new SQLiteHelper(this);
+
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {                                                             SQLiteHelper helper = new SQLiteHelper(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lists_activity);
 
+
+        mdbHelper = new SQLiteHelper(this);
+        mdbHelper.open();
+
+        //Generate ListView from SQLite Database
+        displayListView();
+
         final ListView listview = (ListView) findViewById(R.id.listview);
-        String[] values = new String[] { "Android", "iPhone", "WindowsMobile",
-                "Blackberry", "WebOS", "Ubuntu", "Windows7", "Max OS X",
-                "Linux", "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux",
-                "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux", "OS/2",
-                "Android", "iPhone", "WindowsMobile" };
+        final Button addButton = (Button) findViewById(R.id.add_button);
+        final EditText addEditText = (EditText) findViewById(R.id.add_item_edit_text);
+
+        String[] values = new String[]{"Android", "iPhone", "WindowsMobile"
+        };
+
 
         final ArrayList<String> list = new ArrayList<String>();
         for (int i = 0; i < values.length; ++i) {
             list.add(values[i]);
         }
-        final StableArrayAdapter adapter = new StableArrayAdapter(this,android.R.layout.simple_list_item_1, list);
+
+        final StableArrayAdapter adapter = new StableArrayAdapter(this, android.R.layout.simple_list_item_1, list);
         listview.setAdapter(adapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -57,49 +71,24 @@ public class ListsActivity extends Activity {
                         });
             }
         });
-    }
 
-    private class StableArrayAdapter extends ArrayAdapter<String> {
+        addButton.setOnClickListener(new View.OnClickListener() {
 
-        HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
+            public void onClick(View v) {
+                String newItem = addEditText.getText().toString();
 
-        public StableArrayAdapter(Context context, int textViewResourceId,
-                                  List<String> objects) {
-            super(context, textViewResourceId, objects);
-            for (int i = 0; i < objects.size(); ++i) {
-                mIdMap.put(objects.get(i), i);
+                Log.d("ListActivity", newItem);
+                adapter.add(newItem);
+                adapter.notifyDataSetChanged();
             }
-        }
+        });
 
-        @Override
-        public long getItemId(int position) {
-            String item = getItem(position);
-            return mIdMap.get(item);
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
 
     }
 
+    private void displayListView() {
+        // TODO: connect the database to the listview
+        // http://www.mysamplecode.com/2012/07/android-listview-cursoradapter-sqlite.html
+        //To change body of created methods use File | Settings | File Templates.
+    }
 }
-
-
-
-
-    /*lists_button.setOnClickListener(new View.OnClickListener() {
-
-        public void onClick(View v) {
-            Intent i = new Intent(getApplicationContext(), ListsActivity.class);
-            Log.d("main", "before result");
-            startActivityForResult(i, LISTS_REQUEST);
-        }
-    };     */
-
-
-
-
-
-
