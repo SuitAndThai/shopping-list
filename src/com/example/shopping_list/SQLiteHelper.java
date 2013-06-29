@@ -8,6 +8,8 @@ package com.example.shopping_list;
  * To change this template use File | Settings | File Templates.
  */
 
+import Model.Item;
+import Model.ShoppingList;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;

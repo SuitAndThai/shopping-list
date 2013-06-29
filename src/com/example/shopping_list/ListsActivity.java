@@ -1,5 +1,7 @@
 package com.example.shopping_list;
 
+import Model.Item;
+import Model.ShoppingList;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;

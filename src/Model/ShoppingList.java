@@ -1,4 +1,4 @@
-package com.example.shopping_list;
+package Model;
 
 /**
  * Created with IntelliJ IDEA.
