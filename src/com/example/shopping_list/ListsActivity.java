@@ -1,15 +1,16 @@
 package com.example.shopping_list;
 
-import com.example.model.Item;
-import com.example.model.ShoppingList;
-import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.view.KeyEvent;
+import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.*;
 import com.example.database.DBConstants;
 import com.example.database.SQLiteHelper;
+import com.example.model.Item;
+import com.example.model.ShoppingList;
+import com.example.shopping_list.AddDialog.AddDialogListener;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,7 +19,7 @@ import com.example.database.SQLiteHelper;
  * Time: 11:25 AM
  * To change this template use File | Settings | File Templates.
  */
-public class ListsActivity extends Activity {
+public class ListsActivity extends FragmentActivity implements AddDialogListener {
 
     public static final String EXTRA_MESSAGE = "Lists";
 
@@ -27,50 +28,55 @@ public class ListsActivity extends Activity {
     private int currentListOrder = 0;
     private TextView listTitle;
     private ListView listView;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Typical Activity calls
         super.onCreate(savedInstanceState);
-
-        // IF OUR DATABASE ISN'T EMPTY
         setContentView(R.layout.lists_activity);
+        this.context = this.getApplicationContext();
 
         // connect to the database
         mdbHelper = new SQLiteHelper(this);
 
+        // Finding our layout elements
         listTitle = (TextView) findViewById(R.id.list_title_text_view);
         listView = (ListView) findViewById(R.id.item_info_list_view);
-        final EditText addItemEditText = (EditText) findViewById(R.id.add_item_edit_text);
-        final EditText addListEditText = (EditText) findViewById(R.id.add_list_edit_text);
+        final Button addItemButton = (Button) findViewById(R.id.add_item_button);
+        final Button addListButton = (Button) findViewById(R.id.add_list_button);
 
-        addItemEditText.setFocusableInTouchMode(true);
-        addItemEditText.setOnKeyListener(new View.OnKeyListener() {
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                // If the event is a key-down event on the "enter" button
-                if ((event.getAction() == KeyEvent.ACTION_DOWN) &&
-                        (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    addItem(addItemEditText);
-                    return true;
-                }
-                return false;
+
+        // Set our button listeners to open dialogs
+        addItemButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAddItemDialog();
             }
         });
 
-        addListEditText.setFocusableInTouchMode(true);
-        addListEditText.setOnKeyListener(new View.OnKeyListener() {
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                // If the event is a key-down event on the "enter" button
-                if ((event.getAction() == KeyEvent.ACTION_DOWN) &&
-                        (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    addList(addItemEditText);
-                    return true;
-                }
-                return false;
+        addListButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAddListDialog();
             }
         });
 
         //Generate ListView from SQLite Database
         displayListView(currentListOrder);
+    }
+
+    private void showAddListDialog() {
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+        AddDialog addListDialog = new AddDialog(AddDialog.ADD_LIST);
+        addListDialog.show(fm, "dialog_add_list");
+    }
+
+
+    private void showAddItemDialog() {
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+        AddDialog addItemDialog = new AddDialog(AddDialog.ADD_ITEM);
+        addItemDialog.show(fm, "dialog_add_item");
     }
 
     private void addList(EditText addListEditText) {
@@ -186,5 +192,10 @@ public class ListsActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    @Override
+    public void onFinishAddDialog(String inputText) {
+        Toast.makeText(this, "You typed " + inputText, Toast.LENGTH_SHORT).show();
     }
 }

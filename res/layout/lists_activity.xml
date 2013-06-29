@@ -14,17 +14,15 @@
               android:id="@+id/item_info_list_view"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"/>
-
-    <EditText
+    <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/add_item_edit_text"
-            android:hint="@string/add_item_hint"/>
-    <EditText
+            android:text="@string/new_item_button"
+            android:id="@+id/add_item_button"/>
+    <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/add_list_hint"
-            android:id="@+id/add_list_edit_text"/>
-
+            android:text="@string/new_list_button"
+            android:id="@+id/add_list_button"/>
 
 </LinearLayout>
