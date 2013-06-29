@@ -1,4 +1,4 @@
-package Model;
+package com.example.model;
 
 /**
  * Created with IntelliJ IDEA.

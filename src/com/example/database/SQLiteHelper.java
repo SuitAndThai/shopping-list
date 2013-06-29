@@ -1,4 +1,4 @@
-package com.example.shopping_list;
+package com.example.database;
 
 /**
  * Created with IntelliJ IDEA.
@@ -8,8 +8,8 @@ package com.example.shopping_list;
  * To change this template use File | Settings | File Templates.
  */
 
-import Model.Item;
-import Model.ShoppingList;
+import com.example.model.Item;
+import com.example.model.ShoppingList;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;

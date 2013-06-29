@@ -1,13 +1,15 @@
 package com.example.shopping_list;
 
-import Model.Item;
-import Model.ShoppingList;
+import com.example.model.Item;
+import com.example.model.ShoppingList;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.*;
+import com.example.database.DBConstants;
+import com.example.database.SQLiteHelper;
 
 /**
  * Created with IntelliJ IDEA.

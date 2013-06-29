@@ -1,4 +1,4 @@
-package com.example.shopping_list;
+package com.example.api;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

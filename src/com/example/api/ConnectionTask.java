@@ -1,4 +1,4 @@
-package com.example.shopping_list;
+package com.example.api;
 
 import android.os.AsyncTask;
 import android.util.Log;
