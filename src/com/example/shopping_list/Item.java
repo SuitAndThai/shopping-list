@@ -8,6 +8,9 @@ package com.example.shopping_list;
  * To change this template use File | Settings | File Templates.
  */
 public class Item {
+    public static int IS_BOUGHT = 1;
+    public static int UNBOUGHT = 0;
+
     public int id;
     public String name;
     public int status;

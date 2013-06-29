@@ -20,21 +20,12 @@ import java.util.*;
 
 public class SQLiteHelper extends SQLiteOpenHelper {
 
-    public static final String TABLE_COMMENTS = "comments";
-    public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_COMMENT = "comment";
-
-    private static final String DATABASE_NAME = "commments.db";
-    private static final int DATABASE_VERSION = 1;
-
-    // Database creation sql statement
-    private static final String DATABASE_CREATE = "create table "
-            + TABLE_COMMENTS + "(" + COLUMN_ID
-            + " integer primary key autoincrement, " + COLUMN_COMMENT
-            + " text not null);";
+    private static final String DATABASE_NAME = "comments.db";
+    private static final int DATABASE_VERSION = 4;
 
     public SQLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        // TODO: only open DB once
     }
 
     @Override
@@ -63,13 +54,28 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = open();
         ContentValues values = new ContentValues();
 
-        values.put(DBConstants.ItemsCols._ID, newItem.id);
+        //get size of the list
+        int listId = newItem.listId;
+        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
+                DBConstants.ItemsCols._SHOPPING_LIST_ID + "=?", new String[]{String.valueOf(listId)}
+                , null, null, null);
+        int count;
+
+        if (cursor == null) {
+            throw new RuntimeException();
+        }
+        try {
+            count = cursor.getCount();
+        } finally {
+            cursor.close();
+        }
         values.put(DBConstants.ItemsCols._SHOPPING_LIST_ID, newItem.listId);
         values.put(DBConstants.ItemsCols.NAME, newItem.name);
-        values.put(DBConstants.ItemsCols.ORDER, newItem.order);
-        values.put(DBConstants.ItemsCols.STATUS, newItem.status);
+        values.put(DBConstants.ItemsCols.ITEM_ORDER, count);
+        values.put(DBConstants.ItemsCols.STATUS, Item.UNBOUGHT);
 
         db.insert(DBConstants.ItemsCols.TABLE_NAME, null, values);
+
         db.close();
     }
 
@@ -83,34 +89,34 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = open();
         ContentValues values = new ContentValues();
 
-        values.put(DBConstants.ItemsCols._ID, item.id);
         values.put(DBConstants.ItemsCols._SHOPPING_LIST_ID, item.listId);
         values.put(DBConstants.ItemsCols.NAME, item.name);
-        values.put(DBConstants.ItemsCols.ORDER, item.order);
+        values.put(DBConstants.ItemsCols.ITEM_ORDER, item.order);
         values.put(DBConstants.ItemsCols.STATUS, item.status);
 
         // updating row
-        return db.update(DBConstants.ItemsCols.TABLE_NAME, values, DBConstants.ItemsCols._ID + " = ?",
+        int result = db.update(DBConstants.ItemsCols.TABLE_NAME, values, DBConstants.ItemsCols._ID + " = ?",
                 new String[]{String.valueOf(item.id)});
+        db.close();
+        return result;
     }
 
 
     private void deleteItem(Item item) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = open();
         db.delete(DBConstants.ItemsCols.TABLE_NAME, DBConstants.ItemsCols._ID + " = ?",
                 new String[]{String.valueOf(item.id)});
         db.close();
     }
 
+    /*
+    Returns the cursor moved to the first row or null if no entries exist
+     */
     public Cursor fetchAllItems(ShoppingList list) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
+        SQLiteDatabase db = open();
+        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, new String[]{DBConstants.ItemsCols._ID, DBConstants.ItemsCols.NAME},
                 DBConstants.ItemsCols._SHOPPING_LIST_ID + "=?", new String[]{String.valueOf(list.id)}
                 , null, null, null);
-
-        if (cursor != null)
-            cursor.moveToFirst();
-
         return cursor;
     }
 
@@ -119,12 +125,14 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
-        values.put(DBConstants.ShoppingListsCols._ID, newList.id);
-        values.put(DBConstants.ShoppingListsCols.IS_FAVORITE, newList.favorite);
+        values.put(DBConstants.ShoppingListsCols.IS_FAVORITE, ShoppingList.UNFAVORITE);
         values.put(DBConstants.ShoppingListsCols.TITLE, newList.title);
+        values.put(DBConstants.ShoppingListsCols.LIST_ORDER, 0);
 
         db.insert(DBConstants.ShoppingListsCols.TABLE_NAME, null, values);
+
         db.close();
+        orderLists();
     }
 
     public void deleteList(ShoppingList list) {
@@ -141,44 +149,49 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.IS_FAVORITE)}
                 , null, null, null);
 
-        if (cursor != null)
-            cursor.moveToFirst();
-
-        ArrayList<ShoppingList> shoppingLists = new ArrayList<ShoppingList>();
-        while (cursor.moveToNext()) {
-            ShoppingList list = new ShoppingList();
-            list.id = cursor.getInt(0);
-            list.title = cursor.getString(1);
-            list.favorite = cursor.getInt(2);
-            list.order = cursor.getInt(3);
-            shoppingLists.add(list);
+        if (cursor == null) {
+            throw new RuntimeException();
         }
-
-        SortedMap<String, ShoppingList> favoriteLists = new TreeMap<String, ShoppingList>();
-        SortedMap<String, ShoppingList> notFavoriteLists = new TreeMap<String, ShoppingList>();
-        for (ShoppingList list : shoppingLists) {
-            if (list.favorite == ShoppingList.IS_FAVORITE) {
-                favoriteLists.put(list.title, list);
-            } else {
-                notFavoriteLists.put(list.title, list);
+        try {
+            ArrayList<ShoppingList> shoppingLists = new ArrayList<ShoppingList>();
+            while (cursor.moveToNext()) {
+                ShoppingList list = new ShoppingList();
+                list.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
+                list.title = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
+                list.favorite = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
+                list.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
+                shoppingLists.add(list);
             }
+
+            SortedMap<String, ShoppingList> favoriteLists = new TreeMap<String, ShoppingList>();
+            SortedMap<String, ShoppingList> notFavoriteLists = new TreeMap<String, ShoppingList>();
+            for (ShoppingList list : shoppingLists) {
+                if (list.favorite == ShoppingList.IS_FAVORITE) {
+                    favoriteLists.put(list.title, list);
+                } else {
+                    notFavoriteLists.put(list.title, list);
+                }
+            }
+
+            int i = 0;
+            SortedSet<String> favoriteKeys = new TreeSet<String>(favoriteLists.keySet());
+            for (String title : favoriteKeys) {
+                favoriteLists.get(title).order = i;
+                i++;
+                updateList(favoriteLists.get(title));
+            }
+
+            SortedSet<String> notFavoriteKeys = new TreeSet<String>(notFavoriteLists.keySet());
+            for (String title : notFavoriteKeys) {
+                notFavoriteLists.get(title).order = i;
+                i++;
+                updateList(notFavoriteLists.get(title));
+            }
+        } finally {
+            cursor.close();
         }
 
-        int i = 0;
-        SortedSet<String> favoriteKeys = new TreeSet<String>(favoriteLists.keySet());
-        for (String title : favoriteKeys) {
-            favoriteLists.get(title).order = i;
-            i++;
-            updateList(favoriteLists.get(title));
-        }
-
-        SortedSet<String> notFavoriteKeys = new TreeSet<String>(notFavoriteLists.keySet());
-        for (String title : notFavoriteKeys) {
-            notFavoriteLists.get(title).order = i;
-            i++;
-            updateList(notFavoriteLists.get(title));
-        }
-
+        db.close();
     }
 
     public void orderListItems(ShoppingList list) {
@@ -188,90 +201,122 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 DBConstants.ItemsCols._SHOPPING_LIST_ID + "=?", new String[]{String.valueOf(list.id)}
                 , null, null, null);
 
-        if (cursor != null)
-            cursor.moveToFirst();
-
-        ArrayList<Item> itemList = new ArrayList<Item>();
-        while (cursor.moveToNext()) {
-            Item item = new Item();
-            item.id = cursor.getInt(0);
-            item.name = cursor.getString(1);
-            item.status = cursor.getInt(2);
-            item.order = cursor.getInt(3);
-            item.listId = cursor.getInt(4);
-            itemList.add(item);
+        if (cursor == null) {
+            throw new RuntimeException();
         }
-
-        SortedMap<String, Item> unboughtItems = new TreeMap<String, Item>();
-        SortedMap<String, Item> boughtItems = new TreeMap<String, Item>();
-        for (Item item : itemList) {
-            if (item.status == 1) {
-                boughtItems.put(item.name, item);
-            } else {
-                unboughtItems.put(item.name, item);
+        try {
+            ArrayList<Item> itemList = new ArrayList<Item>();
+            while (cursor.moveToNext()) {
+                Item item = new Item();
+                item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
+                item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
+                item.status = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
+                item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
+                item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
+                itemList.add(item);
             }
+
+            SortedMap<String, Item> unboughtItems = new TreeMap<String, Item>();
+            SortedMap<String, Item> boughtItems = new TreeMap<String, Item>();
+            for (Item item : itemList) {
+                if (item.status == 1) {
+                    boughtItems.put(item.name, item);
+                } else {
+                    unboughtItems.put(item.name, item);
+                }
+            }
+
+            int i = 0;
+            SortedSet<String> unboughtKeys = new TreeSet<String>(unboughtItems.keySet());
+            for (String name : unboughtKeys) {
+                unboughtItems.get(name).order = i;
+                i++;
+                updateItem(unboughtItems.get(name));
+            }
+
+            SortedSet<String> boughtKeys = new TreeSet<String>(boughtItems.keySet());
+            for (String name : boughtKeys) {
+                boughtItems.get(name).order = i;
+                i++;
+                updateItem(boughtItems.get(name));
+            }
+        } finally {
+            cursor.close();
         }
 
-        int i = 0;
-        SortedSet<String> unboughtKeys = new TreeSet<String>(unboughtItems.keySet());
-        for (String name : unboughtKeys) {
-            unboughtItems.get(name).order = i;
-            i++;
-            updateItem(unboughtItems.get(name));
-        }
-
-        SortedSet<String> boughtKeys = new TreeSet<String>(boughtItems.keySet());
-        for (String name : boughtKeys) {
-            boughtItems.get(name).order = i;
-            i++;
-            updateItem(boughtItems.get(name));
-        }
+        db.close();
     }
 
     public int toggleFavorite(ShoppingList list) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
-        values.put(DBConstants.ShoppingListsCols._ID, list.id);
         values.put(DBConstants.ShoppingListsCols.IS_FAVORITE, Math.abs(list.favorite - 1));
         values.put(DBConstants.ShoppingListsCols.TITLE, list.title);
 
         // updating row
-        return db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
+        int result = db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
                 new String[]{String.valueOf(list.id)});
+
+        db.close();
+        return result;
     }
 
     public int renameList(ShoppingList list, String newName) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
-        values.put(DBConstants.ShoppingListsCols._ID, list.id);
         values.put(DBConstants.ShoppingListsCols.IS_FAVORITE, list.favorite);
         values.put(DBConstants.ShoppingListsCols.TITLE, newName);
 
         // updating row
-        return db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
+        int result = db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
                 new String[]{String.valueOf(list.id)});
+        db.close();
+        return result;
     }
 
 
-    public ShoppingList getList(int order){
-        // TODO: get the list object
-        return null;
+    public ShoppingList getList(int order) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
+                DBConstants.ShoppingListsCols.LIST_ORDER + "=?", new String[]{String.valueOf(order)}
+                , null, null, null);
+        if (cursor == null) {
+            throw new RuntimeException();
+        }
+        try {
+            if (cursor.moveToFirst()) {
+                ShoppingList list = new ShoppingList();
+                list.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
+                list.title = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
+                list.favorite = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
+                list.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
+                db.close();
+                return list;
+            }
+            db.close();
+            return null;
+        } finally {
+            cursor.close();
+        }
+
     }
 
     public int updateList(ShoppingList list) {
         SQLiteDatabase db = open();
         ContentValues values = new ContentValues();
 
-        values.put(DBConstants.ShoppingListsCols._ID, list.id);
         values.put(DBConstants.ShoppingListsCols.TITLE, list.title);
         values.put(DBConstants.ShoppingListsCols.IS_FAVORITE, list.favorite);
-        values.put(DBConstants.ShoppingListsCols.ORDER, list.order);
+        values.put(DBConstants.ShoppingListsCols.LIST_ORDER, list.order);
 
         // updating row
-        return db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
+        int result = db.update(DBConstants.ShoppingListsCols.TABLE_NAME, values, DBConstants.ShoppingListsCols._ID + " = ?",
                 new String[]{String.valueOf(list.id)});
+        db.close();
+        return result;
     }
 
 }
