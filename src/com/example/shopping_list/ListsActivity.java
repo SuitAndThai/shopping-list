@@ -30,7 +30,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     private ListView listView;
     private Context context;
 
-    // A quick hack, we need to use SharedPreferences instead
+    // TODO: A quick hack, we need to use SharedPreferences instead though
     private int ADD_OBJECT = -1;
     private static int DEFAULT_OBJECT = -1;
     private static int ITEM_OBJECT = 0;
@@ -40,7 +40,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     protected void onCreate(Bundle savedInstanceState) {
         // Typical Activity calls
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.lists_activity);
+        setContentView(R.layout.lists);
         this.context = this.getApplicationContext();
 
         // connect to the database
@@ -51,7 +51,6 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         listView = (ListView) findViewById(R.id.item_info_list_view);
         final Button addItemButton = (Button) findViewById(R.id.add_item_button);
         final Button addListButton = (Button) findViewById(R.id.add_list_button);
-
 
         // Set our button listeners to open dialogs
         addItemButton.setOnClickListener(new View.OnClickListener() {
@@ -71,7 +70,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         });
 
         //Generate ListView from SQLite Database
-        displayListView();
+        displayListView(this.currentListOrder);
     }
 
     private void showAddListDialog() {
@@ -91,8 +90,10 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         //create a list based on the text
         ShoppingList newList = new ShoppingList();
         newList.title = title;
+        this.currentListOrder = mdbHelper.addList(newList);
 
-        mdbHelper.addList(newList);
+        displayListView(this.currentListOrder);
+        refreshView();
     }
 
     private void addItem(String name) {
@@ -105,14 +106,14 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         refreshView();
     }
 
-    private void displayListView() {
-
-        ShoppingList list = mdbHelper.getList(currentListOrder);
+    private void displayListView(int listOrder) {
+        this.currentListOrder = listOrder;
+        ShoppingList list = mdbHelper.getList(this.currentListOrder);
         if (list == null) {
             list = new ShoppingList();
             list.title = getString(R.string.new_list_title);
             list.favorite = ShoppingList.UNFAVORITE;
-            list.order = 0;
+//            list.order = 0;
 
             mdbHelper.addList(list);
         }
@@ -224,20 +225,5 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         Cursor cursor = mdbHelper.fetchAllItems(list);
         this.mDataAdapter.changeCursor(cursor);
-//
-//        // data from the database
-//        String[] columns = new String[]{DBConstants.ItemsCols.NAME};
-//
-//        // destination views for the data from the database
-//        int[] to = new int[]{R.id.item_info_text_view};
-//
-//        // create the adapter using the cursor pointing to the desired data
-//        //as well as the layout information
-//        mDataAdapter = new SimpleCursorAdapter(
-//                this, R.layout.item_info,
-//                cursor,
-//                columns,
-//                to,
-//                0);
     }
 }
