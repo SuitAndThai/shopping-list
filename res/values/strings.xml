@@ -7,7 +7,7 @@
     <string name="add_an_item">Add an item</string><string name="add_list">Add List</string>
     <string name="add_item_hint">Add item</string>
     <string name="add_list_hint">Add List</string>
-    <string name="new_list_title">New List</string>
+    <string name="new_list_title">Unnamed List</string>
     <string name="new_item_button">Add Item</string>
     <string name="new_list_button">Add List</string>
 </resources>

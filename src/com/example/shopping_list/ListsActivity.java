@@ -30,6 +30,12 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     private ListView listView;
     private Context context;
 
+    // A quick hack, we need to use SharedPreferences instead
+    private int ADD_OBJECT = -1;
+    private static int DEFAULT_OBJECT = -1;
+    private static int ITEM_OBJECT = 0;
+    private static int LIST_OBJECT = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Typical Activity calls
@@ -51,6 +57,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         addItemButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ADD_OBJECT = ITEM_OBJECT;
                 showAddItemDialog();
             }
         });
@@ -58,12 +65,13 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         addListButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ADD_OBJECT = LIST_OBJECT;
                 showAddListDialog();
             }
         });
 
         //Generate ListView from SQLite Database
-        displayListView(currentListOrder);
+        displayListView();
     }
 
     private void showAddListDialog() {
@@ -79,10 +87,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         addItemDialog.show(fm, "dialog_add_item");
     }
 
-    private void addList(EditText addListEditText) {
-        //get the text
-        String title = addListEditText.getText().toString();
-
+    private void addList(String title) {
         //create a list based on the text
         ShoppingList newList = new ShoppingList();
         newList.title = title;
@@ -90,22 +95,19 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         mdbHelper.addList(newList);
     }
 
-    private void addItem(EditText addItemEditText) {
-        //get the text
-        String name = addItemEditText.getText().toString();
-
+    private void addItem(String name) {
         //create an item based on the text
         Item newItem = new Item();
         newItem.name = name;
         newItem.listId = mdbHelper.getList(currentListOrder).id;
 
         mdbHelper.addItem(newItem);
-        mDataAdapter.notifyDataSetChanged();
+        refreshView();
     }
 
-    private void displayListView(int listOrder) {
+    private void displayListView() {
 
-        ShoppingList list = mdbHelper.getList(listOrder);
+        ShoppingList list = mdbHelper.getList(currentListOrder);
         if (list == null) {
             list = new ShoppingList();
             list.title = getString(R.string.new_list_title);
@@ -196,6 +198,46 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
     @Override
     public void onFinishAddDialog(String inputText) {
-        Toast.makeText(this, "You typed " + inputText, Toast.LENGTH_SHORT).show();
+        if (ADD_OBJECT == ITEM_OBJECT) {
+            Toast.makeText(this, "Added " + inputText, Toast.LENGTH_SHORT).show();
+            addItem(inputText);
+        } else if (ADD_OBJECT == LIST_OBJECT) {
+            Toast.makeText(this, "Started list " + inputText, Toast.LENGTH_SHORT).show();
+            addList(inputText);
+        } else {
+            Toast.makeText(this, "I can't tell if this is an ITEM or a LIST.", Toast.LENGTH_SHORT).show();
+        }
+
+        ADD_OBJECT = DEFAULT_OBJECT;
+    }
+
+    private void refreshView() {
+        ShoppingList list = mdbHelper.getList(currentListOrder);
+        if (list == null) {
+            list = new ShoppingList();
+            list.title = getString(R.string.new_list_title);
+            list.favorite = ShoppingList.UNFAVORITE;
+            list.order = 0;
+
+            mdbHelper.addList(list);
+        }
+
+        Cursor cursor = mdbHelper.fetchAllItems(list);
+        this.mDataAdapter.changeCursor(cursor);
+//
+//        // data from the database
+//        String[] columns = new String[]{DBConstants.ItemsCols.NAME};
+//
+//        // destination views for the data from the database
+//        int[] to = new int[]{R.id.item_info_text_view};
+//
+//        // create the adapter using the cursor pointing to the desired data
+//        //as well as the layout information
+//        mDataAdapter = new SimpleCursorAdapter(
+//                this, R.layout.item_info,
+//                cursor,
+//                columns,
+//                to,
+//                0);
     }
 }
