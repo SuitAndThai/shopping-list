@@ -2,7 +2,6 @@ package com.example.api;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import org.apache.http.util.ByteArrayBuffer;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -19,9 +18,6 @@ import java.net.URL;
 public class ConnectionTask extends AsyncTask<URL, Void, String> {
     protected String doInBackground(URL... urls) {
         InputStream is = null;
-        // Only display the first 500 characters of the retrieved
-        // web page content.
-        int len = 500;
         String contentAsString = "";
 
         try {
@@ -38,7 +34,7 @@ public class ConnectionTask extends AsyncTask<URL, Void, String> {
             is = conn.getInputStream();
 
             // Convert the InputStream into a string
-            contentAsString = readIt(is, len);
+            contentAsString = readIt(is);
 
             // Makes sure that the InputStream is closed after the app is
             // finished using it.
@@ -62,12 +58,17 @@ public class ConnectionTask extends AsyncTask<URL, Void, String> {
     }
 
     // Reads an InputStream and converts it to a String.
-    public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-        Reader reader = null;
-        reader = new InputStreamReader(stream, "UTF-8");
-        char[] buffer = new char[len];
-        reader.read(buffer);
-        return new String(buffer);
+    public String readIt(InputStream stream) throws IOException {
+        BufferedReader reader = null;
+        reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+        StringBuilder sb = new StringBuilder();
+
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line + "\n");
+        }
+
+        return sb.toString();
     }
 
     protected void onProgressUpdate(Integer... progress) {

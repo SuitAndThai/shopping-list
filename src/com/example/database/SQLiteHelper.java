@@ -376,4 +376,61 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return result;
     }
 
+    public Cursor fetchAllLists() {
+        SQLiteDatabase db = open();
+
+        Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, new String[]{DBConstants.ShoppingListsCols._ID,
+                DBConstants.ShoppingListsCols.LIST_ORDER, DBConstants.ShoppingListsCols.TITLE},
+                DBConstants.ShoppingListsCols.LIST_ORDER + ">=?", new String[]{String.valueOf(0)}
+                , null, null, null);
+        return cursor;
+    }
+
+    public ArrayList<ShoppingList> getListArray() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursorFavorites = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
+                DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.FAVORITE)}
+                , null, null, null);
+        Cursor cursorUnfavorites = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
+                DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.UNFAVORITE)}
+                , null, null, null);
+
+       ArrayList<ShoppingList> listArray = new ArrayList<ShoppingList>();
+
+        if ((cursorFavorites == null) || (cursorUnfavorites == null)) {
+            throw new RuntimeException();
+        }
+        try {
+
+            cursorFavorites.moveToFirst();
+
+            while(cursorFavorites.moveToNext()) {
+                ShoppingList list = new ShoppingList();
+                list.id = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
+                list.title = cursorFavorites.getString(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
+                list.favorite = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
+                list.order = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
+                listArray.add(list);
+            }
+
+            cursorUnfavorites.moveToFirst();
+            while (cursorUnfavorites.moveToNext()) {
+                ShoppingList list = new ShoppingList();
+                list.id = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
+                list.title = cursorUnfavorites.getString(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
+                list.favorite = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
+                list.order = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
+                listArray.add(list);
+            }
+
+        } finally {
+            cursorFavorites.close();
+            cursorUnfavorites.close();
+        }
+
+        db.close();
+        return listArray;
+    }
+
 }
