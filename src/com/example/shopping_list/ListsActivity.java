@@ -8,7 +8,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import com.example.database.DBConstants;
 import com.example.database.ItemAdapter;
@@ -32,7 +36,10 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     private ItemAdapter mDataAdapter;
     private SQLiteHelper mdbHelper;
     private int currentListOrder = 0;
-    private TextView listTitle;
+    private Button prevList;
+    private ImageView favButton;
+    private EditText listTitle;
+    private Button nextList;
     private ListView listView;
     private Context context;
     private SensorManager mSensorManager;
@@ -58,13 +65,96 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         mdbHelper = new SQLiteHelper(this);
 
         // Finding our layout elements
-        listTitle = (TextView) findViewById(R.id.list_title_text_view);
+        prevList = (Button) findViewById(R.id.left_arrow_button);
+        favButton = (ImageView) findViewById(R.id.favorite);
+        listTitle = (EditText) findViewById(R.id.list_title_edit_text);
+        nextList = (Button) findViewById(R.id.right_arrow_button);
         listView = (ListView) findViewById(R.id.item_info_list_view);
         final Button addItemButton = (Button) findViewById(R.id.add_item_button);
         final Button addListButton = (Button) findViewById(R.id.add_list_button);
-        final Button shakeButton = (Button) findViewById(R.id.shake_button);
 
         // Set our button listeners to open dialogs
+        prevList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mdbHelper.listExists(currentListOrder - 1)) {
+                    currentListOrder = currentListOrder - 1;
+                    displayListView(currentListOrder);
+                    refreshView();
+                }
+            }
+        });
+
+        nextList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mdbHelper.listExists(currentListOrder + 1)) {
+                    currentListOrder = currentListOrder + 1;
+                    displayListView(currentListOrder);
+                    refreshView();
+                }
+            }
+        });
+
+        favButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleFavorite();
+            }
+        });
+
+        // set alpha depending if we're a favorite or not
+
+        // click will toggle favorite
+        favButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //if the list is not a favorite, make it so
+                // same vice versa
+            }
+        });
+
+        listTitle.setSingleLine();
+        listTitle.setCursorVisible(false);
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        listTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listTitle.setCursorVisible(true);
+            }
+        });
+        listTitle.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (EditorInfo.IME_ACTION_DONE == actionId) {
+                    // get text
+                    String input = v.getText().toString();
+
+                    // check to see if it already exists
+                    ShoppingList list;
+                    if (mdbHelper.listExists(input)) {
+                        list = mdbHelper.getList(currentListOrder);
+                        Toast.makeText(context, input + " already exists", Toast.LENGTH_SHORT);
+                        v.setText(list.title);
+                    } else {
+                        list = mdbHelper.getList(currentListOrder);
+//                        mdbHelper.renameList(list, input);
+                        list.title = input;
+                        mdbHelper.updateList(list);
+                    }
+                    v.setSelected(false);
+                    v.setCursorVisible(false);
+
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+                    mdbHelper.orderLists();
+                    return true;
+                }
+                return false;
+            }
+        });
+
         addItemButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -78,13 +168,6 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
             public void onClick(View v) {
                 ADD_OBJECT = LIST_OBJECT;
                 showAddListDialog();
-            }
-        });
-
-        shakeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isShaking();
             }
         });
 
@@ -120,11 +203,27 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         }
     };
 
+    private void toggleFavorite() {
+        ShoppingList list = mdbHelper.getList(currentListOrder);
+        if (list.favorite == ShoppingList.FAVORITE) {
+            Toast.makeText(this, "a favorite", Toast.LENGTH_SHORT).show();
+            favButton.setAlpha(200);
+        }
+        else {
+            Toast.makeText(this, "not a favorite", Toast.LENGTH_SHORT).show();
+            favButton.setAlpha(200);
+        }
+        // actually set the favorite
+
+        // don't forget to switch it when another list is toggled
+    }
+
     private void isShaking() {
-        Toast.makeText(getApplicationContext(), "shaking", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "let's shuffle it a bit", Toast.LENGTH_LONG).show();
 
         ShoppingList list = mdbHelper.getList(currentListOrder);
         mdbHelper.orderListItems(list);
+        displayListView(currentListOrder);
         refreshView();
     }
 
@@ -249,13 +348,17 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                 addItem(inputText);
             }
         } else if (ADD_OBJECT == LIST_OBJECT) {
-            Toast.makeText(this, "Started list " + inputText, Toast.LENGTH_SHORT).show();
-            addList(inputText);
+            if (mdbHelper.listExists(inputText)) {
+                Toast.makeText(this, inputText + " already exists", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Started list " + inputText, Toast.LENGTH_SHORT).show();
+                addList(inputText);
+            }
         } else {
             Toast.makeText(this, "I can't tell if this is an ITEM or a LIST.", Toast.LENGTH_SHORT).show();
         }
-
         ADD_OBJECT = DEFAULT_OBJECT;
+//        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
     private void refreshView() {

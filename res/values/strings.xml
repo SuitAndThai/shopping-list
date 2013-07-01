@@ -10,4 +10,6 @@
     <string name="new_list_title">Unnamed List</string>
     <string name="new_item_button">Add Item</string>
     <string name="new_list_button">Add List</string>
+    <string name="left_arrow"><![CDATA[<]]></string>
+    <string name="right_arrow"><![CDATA[>]]></string>
 </resources>

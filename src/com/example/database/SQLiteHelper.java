@@ -213,25 +213,28 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         }
         try {
 
-            cursorFavorites.moveToFirst();
-
-            while(cursorFavorites.moveToNext()) {
-                ShoppingList list = new ShoppingList();
-                list.id = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
-                list.title = cursorFavorites.getString(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
-                list.favorite = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
-                list.order = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
-                favoriteLists.put(list.title, list);
+            if (cursorFavorites.getCount() > 0) {
+                cursorFavorites.moveToFirst();
+                do {
+                    ShoppingList list = new ShoppingList();
+                    list.id = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
+                    list.title = cursorFavorites.getString(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
+                    list.favorite = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
+                    list.order = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
+                    favoriteLists.put(list.title, list);
+                } while (cursorFavorites.moveToNext());
             }
 
-            cursorUnfavorites.moveToFirst();
-            while (cursorUnfavorites.moveToNext()) {
-                ShoppingList list = new ShoppingList();
-                list.id = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
-                list.title = cursorUnfavorites.getString(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
-                list.favorite = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
-                list.order = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
-                unfavoriteLists.put(list.title, list);
+            if (cursorUnfavorites.getCount() > 0) {
+                cursorUnfavorites.moveToFirst();
+                do {
+                    ShoppingList list = new ShoppingList();
+                    list.id = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
+                    list.title = cursorUnfavorites.getString(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
+                    list.favorite = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
+                    list.order = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
+                    unfavoriteLists.put(list.title, list);
+                } while (cursorUnfavorites.moveToNext());
             }
 
         } finally {
@@ -245,14 +248,16 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SortedSet<String> unfavoriteKeys = new TreeSet<String>(unfavoriteLists.keySet());
         SortedSet<String> favoriteKeys = new TreeSet<String>(favoriteLists.keySet());
         for (String title : favoriteKeys) {
-            favoriteLists.get(title).order = i;
+            ShoppingList list = favoriteLists.get(title);
+            list.order = i;
             i++;
-            updateList(favoriteLists.get(title));
+            updateList(list);
         }
         for (String title : unfavoriteKeys) {
-            unfavoriteLists.get(title).order = i;
+            ShoppingList list = unfavoriteLists.get(title);
+            list.order = i;
             i++;
-            updateList(unfavoriteLists.get(title));
+            updateList(list);
         }
     }
 
@@ -359,6 +364,46 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             cursor.close();
         }
 
+    }
+
+    public boolean listExists(String title) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        boolean exists = false;
+
+        Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
+                DBConstants.ShoppingListsCols.TITLE + "=?", new String[]{title}
+                , null, null, null);
+        if (cursor == null) {
+            throw new RuntimeException();
+        }
+        try {
+            exists = cursor.getCount() > 0;
+        } finally {
+            cursor.close();
+        }
+        db.close();
+
+        return exists;
+    }
+
+    public boolean listExists(int order) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        boolean exists = false;
+
+        Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
+                DBConstants.ShoppingListsCols.LIST_ORDER + "=?", new String[]{String.valueOf(order)}
+                , null, null, null);
+        if (cursor == null) {
+            throw new RuntimeException();
+        }
+        try {
+            exists = cursor.getCount() > 0;
+        } finally {
+            cursor.close();
+        }
+        db.close();
+
+        return exists;
     }
 
     public int updateList(ShoppingList list) {
