@@ -39,7 +39,6 @@ public class ScanSuccessActivity extends Activity {
     String link;
 
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,13 +58,13 @@ public class ScanSuccessActivity extends Activity {
         try {
             getItemInfo(content);
         } catch (MalformedURLException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         } catch (ExecutionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         } catch (JSONException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
         add_to_list_button.setOnClickListener(new View.OnClickListener() {
@@ -77,7 +76,7 @@ public class ScanSuccessActivity extends Activity {
         });
     }
 
-    public void buyOnline(View view){
+    public void buyOnline(View view) {
         Log.d("buyOnline", link);
         Intent i = new Intent(Intent.ACTION_VIEW);
         i.setData(Uri.parse(link));
@@ -126,7 +125,6 @@ public class ScanSuccessActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
-            // Not using ProgressBar in this Tutorial
         }
 
         @Override

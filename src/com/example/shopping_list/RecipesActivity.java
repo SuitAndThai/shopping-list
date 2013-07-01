@@ -2,8 +2,8 @@ package com.example.shopping_list;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -41,8 +41,6 @@ public class RecipesActivity extends Activity {
         ingredientsList = (ListView) findViewById(R.id.ingredients_list_view);
         addRecipeButton = (Button) findViewById(R.id.add_ingredients_button);
         ingredients = new ArrayList<String>();
-//        ingredientsList.setTextFilterEnabled(true);
-
 
         recipeInput.setSingleLine();
         recipeInput.requestFocus();
@@ -74,7 +72,6 @@ public class RecipesActivity extends Activity {
                         } catch (ExecutionException e) {
                             e.printStackTrace();
                         }
-                        Toast.makeText(getApplicationContext(), "Recipe info = " + data, Toast.LENGTH_SHORT);
 
                         JSONObject jObject = null;
                         try {
@@ -83,7 +80,7 @@ public class RecipesActivity extends Activity {
                             JSONArray recipeArray = jObject.getJSONArray("matches");
                             Context context = getApplicationContext();
 
-                            Toast.makeText(context, "Total Matches = " + totalMatchCount, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(context, "Total Matches = " + totalMatchCount, Toast.LENGTH_SHORT).show();
 
                             String ingredientsString = " ";
                             for (int i = 0; i < recipeArray.length(); i++) {
@@ -100,21 +97,15 @@ public class RecipesActivity extends Activity {
                                 ingredients.add(s);
                             }
 
-//                            final StableArrayAdapter adapter = new StableArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, ingredients);
-//                            ingredientsList.setAdapter(adapter);
-
                             StringBuilder s = new StringBuilder();
                             for (String i : ingredientsArray) {
                                 s.append(i + " ");
                             }
-                            Toast.makeText(getApplicationContext(), "Ingredients = " + s.toString(), Toast.LENGTH_SHORT).show();
                         } catch (JSONException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                            e.printStackTrace();
                         } finally {
                             hideSoftKeyboard();
                         }
-
-                        Log.d("recipe info as JObject: ", jObject.toString());
                         addRecipeButton.setVisibility(View.VISIBLE);
                     } else {
                         ingredients.clear();
@@ -134,8 +125,9 @@ public class RecipesActivity extends Activity {
         addRecipeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ingredients = new ArrayList<String>();
-
+                Intent i = new Intent(getApplicationContext(), ChooseLists.class);
+                i.putExtra(MainActivity.ITEM_INTENT, ingredients);
+                startActivityForResult(i, MainActivity.ADD_REQUEST);
             }
         });
     }
@@ -162,17 +154,24 @@ public class RecipesActivity extends Activity {
         public boolean hasStableIds() {
             return true;
         }
-
-    }
-
-    private void displayIngredientsList(String[] ingredientsArray) {
-
     }
 
 
     public void hideSoftKeyboard() {
         InputMethodManager inputMethodManager = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
-//        InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), 0);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == MainActivity.ADD_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                Intent resultIntent = new Intent();
+                setResult(Activity.RESULT_OK, resultIntent);
+                finish();
+            }
+        }
     }
 }

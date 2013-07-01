@@ -138,7 +138,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
-    public boolean doesItemExist(String name) {
+    public boolean itemExists(String name) {
         SQLiteDatabase db = open();
         Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
                 DBConstants.ItemsCols.NAME + "=?", new String[]{String.valueOf(name)}
@@ -452,7 +452,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, new String[]{DBConstants.ShoppingListsCols._ID,
                 DBConstants.ShoppingListsCols.LIST_ORDER, DBConstants.ShoppingListsCols.TITLE},
                 DBConstants.ShoppingListsCols.LIST_ORDER + ">=?", new String[]{String.valueOf(0)}
-                , null, null, null);
+                , null, null, DBConstants.ShoppingListsCols.LIST_ORDER);
         return cursor;
     }
 

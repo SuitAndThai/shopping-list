@@ -205,9 +205,9 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                         if (!mdbHelper.listExists(currentListOrder)) {
 
                             // if it doesn't exist, check to see if there's something previous
-                             if (mdbHelper.listExists(currentListOrder - 1)) {
-                                 currentListOrder = currentListOrder - 1;
-                             }
+                            if (mdbHelper.listExists(currentListOrder - 1)) {
+                                currentListOrder = currentListOrder - 1;
+                            }
                         }
                         displayListView(currentListOrder);
                         refreshView();
@@ -392,7 +392,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     @Override
     public void onFinishAddDialog(String inputText) {
         if (ADD_OBJECT == ITEM_OBJECT) {
-            if (mdbHelper.doesItemExist(inputText)) {
+            if (mdbHelper.itemExists(inputText)) {
                 Toast.makeText(this, "You already have " + inputText, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Added " + inputText, Toast.LENGTH_SHORT).show();
