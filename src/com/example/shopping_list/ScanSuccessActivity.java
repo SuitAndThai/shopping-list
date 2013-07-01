@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -31,6 +32,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class ScanSuccessActivity extends Activity {
     public static final String KEY = "AIzaSyDpxWLapNipYoZ9SiLTaXCBEL7c_9_DkRI";
+    private ArrayList<String> itemsToAdd;
 
     public static String st = "scan-tag";
     TextView item_name;
@@ -52,6 +54,7 @@ public class ScanSuccessActivity extends Activity {
 
         Intent intent = getIntent();
         String content = intent.getStringExtra("CONTENT");
+        itemsToAdd = new ArrayList<String>();
 
         try {
             getItemInfo(content);
@@ -68,6 +71,7 @@ public class ScanSuccessActivity extends Activity {
         add_to_list_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent i = new Intent(getApplicationContext(), ChooseLists.class);
+                i.putExtra(MainActivity.ITEM_INTENT, itemsToAdd);
                 startActivity(i);
             }
         });

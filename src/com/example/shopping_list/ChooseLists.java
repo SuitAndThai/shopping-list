@@ -2,6 +2,7 @@ package com.example.shopping_list;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,6 +26,7 @@ public class ChooseLists extends Activity {
     private SimpleCursorAdapter mDataAdapter;
     private SQLiteHelper mdbHelper;
     private ListView listView;
+    private ArrayList<String> itemsList;
 
     SparseBooleanArray sparseBooleanArray = new SparseBooleanArray();
 
@@ -36,6 +38,9 @@ public class ChooseLists extends Activity {
         listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
         final Button addToListButton = (Button) findViewById(R.id.add_to_list_button);
 
+        itemsList = new ArrayList<String>();
+        Intent intent = getIntent();
+        itemsList = intent.getStringArrayListExtra(MainActivity.ITEM_INTENT);
 
         mdbHelper = new SQLiteHelper(this);
 
@@ -97,6 +102,10 @@ public class ChooseLists extends Activity {
         Log.d("SparseBooleanArraySize: ", String.valueOf(sparseBooleanArray.size()));
 
         for (int i = 0; i < sparseBooleanArray.size(); i++) {
+            if (sparseBooleanArray.get(i)) {
+
+                  checkedOrder.add(i);
+            }
             Log.d("chooselists", "checked item"+i+" is " + sparseBooleanArray.get(i));
 //            Toast.makeText(this, "checked item is " + sparseBooleanArray.get(i), Toast.LENGTH_SHORT).show();
         }
