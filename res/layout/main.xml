@@ -20,7 +20,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dip"
-            android:text="@string/transfer_receive"
-            android:id="@+id/transfer_receive_button"/>
+            android:text="@string/add_recipe"
+            android:id="@+id/add_recipe_button"/>
 </LinearLayout>
 

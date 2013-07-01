@@ -13,7 +13,7 @@ public class MainActivity extends Activity {
     public static String mt = "main-tag";
     public static int LISTS_REQUEST = 10000;
     public static int BARCODE_REQUEST = 10001;
-    public static int XFER_REQUEST = 10002;
+    public static int RECIPES_REQUEST = 10002;
     public static int SCAN_SUCCESS_REQUEST = 10003;
     public static final String ITEM_INTENT = "ITEM_INTENT";
 
@@ -27,7 +27,7 @@ public class MainActivity extends Activity {
 
         final Button lists_button = (Button) findViewById(R.id.lists_button);
         final Button barcode_button = (Button) findViewById(R.id.barcode_button);
-        final Button transfer_button = (Button) findViewById(R.id.transfer_receive_button);
+        final Button transfer_button = (Button) findViewById(R.id.add_recipe_button);
 
         lists_button.setOnClickListener(new View.OnClickListener() {
 
@@ -48,8 +48,8 @@ public class MainActivity extends Activity {
         transfer_button.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
-                Intent i = new Intent(getApplicationContext(), ListsActivity.class);
-                startActivityForResult(i, LISTS_REQUEST);
+                Intent i = new Intent(getApplicationContext(), RecipesActivity.class);
+                startActivityForResult(i, RECIPES_REQUEST);
             }
         });
     }
@@ -79,11 +79,10 @@ public class MainActivity extends Activity {
             } else if (resultCode == RESULT_CANCELED) {
                 Log.d(mt, "Result Cancelled");
             }
-        } else if (requestCode == XFER_REQUEST) {
+        } else if (requestCode == RECIPES_REQUEST) {
             if (resultCode == RESULT_OK) {
-                Log.d(mt, "Result OK");
+                Toast.makeText(this, "Recipe added", Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_CANCELED) {
-                Log.d(mt, "Result Cancelled");
             }
         } else {
             Log.d(mt, "Unknown request code " + requestCode);

@@ -190,33 +190,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     public void deleteList(int order) {
         SQLiteDatabase db = this.getWritableDatabase();
-//        ShoppingList list = new ShoppingList(getList(order));
-//        Cursor cursor = fetchAllItems(list);
-//        if (cursor == null) {
-//            throw new RuntimeException();
-//        }
-//        try {
-//            if (cursor.getCount() > 0) {
-//                cursor.moveToFirst();
-//                do {
-//                    Item item = new Item();
-//                    item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
-////                    item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
-//                    item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
-////                    item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
-////                    item.status = Math.abs(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
-//
-//                    if (item.listId == list.id) {
-//                        deleteItem(item);
-//                    }
-//
-//                } while (cursor.moveToNext());
-//            }
-//
-//
-//        } finally {
-//
-//        }
         db.delete(DBConstants.ShoppingListsCols.TABLE_NAME, DBConstants.ShoppingListsCols.LIST_ORDER + " = ?",
                 new String[]{String.valueOf(order)});
         orderLists();
