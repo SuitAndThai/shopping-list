@@ -1,13 +1,15 @@
 package com.example.shopping_list;
 
 import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.*;
 import com.example.database.DBConstants;
 import com.example.database.SQLiteHelper;
-import com.example.model.ShoppingList;
 
 import java.util.ArrayList;
 
@@ -19,18 +21,21 @@ import java.util.ArrayList;
  * To change this template use File | Settings | File Templates.
  */
 public class ChooseLists extends Activity {
+
     private SimpleCursorAdapter mDataAdapter;
     private SQLiteHelper mdbHelper;
     private ListView listView;
-    private CheckBox listCheckBox;
-    //private ArrayList<Count>
+
+    SparseBooleanArray sparseBooleanArray = new SparseBooleanArray();
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.choose_lists);
 
         listView = (ListView) findViewById(R.id.choose_list_list_view);
+        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
         final Button addToListButton = (Button) findViewById(R.id.add_to_list_button);
+
 
         mdbHelper = new SQLiteHelper(this);
 
@@ -54,54 +59,50 @@ public class ChooseLists extends Activity {
                 this, R.layout.list_info,
                 cursor,
                 columns,
-                to);
-
-        ArrayList<ShoppingList> listArray = new ArrayList<ShoppingList>();
-        listView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long i)
-            {
-
-            }
-
+                to) {
             @Override
-            public void onNothingSelected(AdapterView<?> arg0) {
-                // TODO Auto-generated method stub
+            public void bindView(View view, Context context, final Cursor cursor) {
+                super.bindView(view, context, cursor);
+                final int position = cursor.getPosition();
+                final CheckBox listCheckBox = (CheckBox) view.findViewById(R.id.list_title_check_box);
+                listCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        sparseBooleanArray.put(position, isChecked);
+                    }
+                });
             }
-        });
+//
+//            @Override
+//            public View newView(Context context, final Cursor cursor, ViewGroup parent) {
+//
+//                View v = super.newView(context, cursor, parent);
+//
+//                return v;
+//            }
+        };
 
         // Assign adapter to ListView
         listView.setAdapter(mDataAdapter);
     }
 
-//    private void checkButtonClick() {
-//
-//
-//        Button myButton = (Button) findViewById(R.id.add_to_list_button);
-//        myButton.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(View v) {
-//
-//                StringBuffer responseText = new StringBuffer();
-//                responseText.append("The following were selected...\n");
-//
-//                ArrayList<ShoppingList> lists = mdbHelper.getListArray();
-//                for (int i = 0; i < lists.size(); i++) {
-//                    ShoppingList shoppingList = lists.get(i);
-//                    if (shoppingList.isSelected()) {
-//                        responseText.append("\n" + ShoppingList.getName());
-//                    }
-//                }
-//
-//                Toast.makeText(getApplicationContext(),
-//                        responseText, Toast.LENGTH_LONG).show();
-//
-//            }
-//        });
-//
-//    }
+    public void addToLists(View view) {
+        ArrayList<Integer> checkedOrder = new ArrayList<Integer>();
+        int listCount = listView.getCount();
+        Log.d("listCount: ", listCount + "");
+
+        String s = "";
+
+        Log.d("SparseBooleanArraySize: ", String.valueOf(sparseBooleanArray.size()));
+
+        for (int i = 0; i < sparseBooleanArray.size(); i++) {
+            Log.d("chooselists", "checked item"+i+" is " + sparseBooleanArray.get(i));
+//            Toast.makeText(this, "checked item is " + sparseBooleanArray.get(i), Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
 
 
 }
