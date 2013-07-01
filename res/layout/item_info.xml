@@ -7,7 +7,9 @@
 
 
     <TextView
+            style="@android:style/TextAppearance.DeviceDefault.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingLeft="10dip"
             android:id="@+id/item_info_text_view"/>
 </LinearLayout>

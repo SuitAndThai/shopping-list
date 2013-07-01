@@ -13,7 +13,7 @@ public class ShoppingList {
     public int favorite;
     public int order;
 
-    public static int IS_FAVORITE = 1;
+    public static int FAVORITE = 1;
     public static int UNFAVORITE = 0;
 
     public ShoppingList() {

@@ -2,11 +2,16 @@ package com.example.shopping_list;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.*;
 import com.example.database.DBConstants;
+import com.example.database.ItemAdapter;
 import com.example.database.SQLiteHelper;
 import com.example.model.Item;
 import com.example.model.ShoppingList;
@@ -23,12 +28,18 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
     public static final String EXTRA_MESSAGE = "Lists";
 
-    private SimpleCursorAdapter mDataAdapter;
+    //    private SimpleCursorAdapter mDataAdapter;
+    private ItemAdapter mDataAdapter;
     private SQLiteHelper mdbHelper;
     private int currentListOrder = 0;
     private TextView listTitle;
     private ListView listView;
     private Context context;
+    private SensorManager mSensorManager;
+    private float mAccel; // acceleration apart from gravity
+    private float mAccelCurrent; // current acceleration including gravity
+    private float mAccelLast; // last acceleration including gravity
+    private static final float mThreshold = 10f;
 
     // TODO: A quick hack, we need to use SharedPreferences instead though
     private int ADD_OBJECT = -1;
@@ -40,7 +51,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     protected void onCreate(Bundle savedInstanceState) {
         // Typical Activity calls
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.lists);
+        setContentView(R.layout.lists_pager);
         this.context = this.getApplicationContext();
 
         // connect to the database
@@ -51,6 +62,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         listView = (ListView) findViewById(R.id.item_info_list_view);
         final Button addItemButton = (Button) findViewById(R.id.add_item_button);
         final Button addListButton = (Button) findViewById(R.id.add_list_button);
+        final Button shakeButton = (Button) findViewById(R.id.shake_button);
 
         // Set our button listeners to open dialogs
         addItemButton.setOnClickListener(new View.OnClickListener() {
@@ -69,8 +81,51 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
             }
         });
 
+        shakeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isShaking();
+            }
+        });
+
         //Generate ListView from SQLite Database
         displayListView(this.currentListOrder);
+
+        // Getting sensor manager
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+        mAccel = 0.00f;
+        mAccelCurrent = SensorManager.GRAVITY_EARTH;
+        mAccelLast = SensorManager.GRAVITY_EARTH;
+    }
+
+    private final SensorEventListener mSensorListener = new SensorEventListener() {
+
+        public void onSensorChanged(SensorEvent se) {
+            float x = se.values[0];
+            float y = se.values[1];
+            float z = se.values[2];
+            mAccelLast = mAccelCurrent;
+            mAccelCurrent = (float) Math.sqrt((double) (x * x + y * y + z * z));
+            float delta = mAccelCurrent - mAccelLast;
+            mAccel = mAccel * 0.9f + delta; // perform low-cut filter
+
+            // if we're shaking
+            if (delta > mThreshold) {
+                isShaking();
+            }
+        }
+
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+    };
+
+    private void isShaking() {
+        Toast.makeText(getApplicationContext(), "shaking", Toast.LENGTH_SHORT).show();
+
+        ShoppingList list = mdbHelper.getList(currentListOrder);
+        mdbHelper.orderListItems(list);
+        refreshView();
     }
 
     private void showAddListDialog() {
@@ -113,7 +168,6 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
             list = new ShoppingList();
             list.title = getString(R.string.new_list_title);
             list.favorite = ShoppingList.UNFAVORITE;
-//            list.order = 0;
 
             mdbHelper.addList(list);
         }
@@ -128,25 +182,20 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         // create the adapter using the cursor pointing to the desired data
         //as well as the layout information
-        mDataAdapter = new SimpleCursorAdapter(
+        mDataAdapter = new ItemAdapter(
                 this, R.layout.item_info,
                 cursor,
                 columns,
-                to,
-                0);
-
+                to);
         listTitle.setText(list.title);
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
                                     int position, long id) {
                 // Get the cursor, positioned to the corresponding row in the result set
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position);
-                Item item = toggleBought(view, cursor);
-
-                // update the DB
-                mdbHelper.updateItem(item);
-
+                toggleBought(view, cursor, position);
             }
         });
 
@@ -154,54 +203,51 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         listView.setAdapter(mDataAdapter);
     }
 
-    private Item toggleBought(final View view, Cursor cursor) {
+    private void toggleBought(final View view, Cursor cursor, int position) {
         // get whether the item is bought
         Item item = new Item();
+
         item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
-        item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
         item.status = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
-        item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
-        item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
 
         // animate so that it turns visible/fades away
-        if (item.status == Item.IS_BOUGHT) {
-            // make it unbought
-            item.status = Item.UNBOUGHT;
-
-            view.animate().setDuration(2000).alpha((float) 0)
+        if (item.status == Item.BOUGHT) {
+            view.animate().setDuration(2000).alpha((float) 1)
                     .withEndAction(new Runnable() {
                         @Override
                         public void run() {
-                            mDataAdapter.notifyDataSetChanged();
-                            view.setAlpha((float) 0);
+                            view.setAlpha((float) 1);
                         }
                     });
         } else {
-            // make it bought
-            item.status = Item.IS_BOUGHT;
-
-            view.animate().setDuration(2000).alpha((float) 0.5)
+            view.animate().setDuration(2000).alpha((float) 0.3)
                     .withEndAction(new Runnable() {
                         @Override
                         public void run() {
-                            mDataAdapter.notifyDataSetChanged();
-                            view.setAlpha((float) 0.5);
+                            view.setAlpha((float) 0.3);
                         }
                     });
         }
-        return item;
+        this.mdbHelper.toggleItem(item);
+        refreshView();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        displayListView(this.currentListOrder);
+        mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     public void onFinishAddDialog(String inputText) {
         if (ADD_OBJECT == ITEM_OBJECT) {
-            Toast.makeText(this, "Added " + inputText, Toast.LENGTH_SHORT).show();
-            addItem(inputText);
+            if (mdbHelper.doesItemExist(inputText)) {
+                Toast.makeText(this, "You already have " + inputText, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Added " + inputText, Toast.LENGTH_SHORT).show();
+                addItem(inputText);
+            }
         } else if (ADD_OBJECT == LIST_OBJECT) {
             Toast.makeText(this, "Started list " + inputText, Toast.LENGTH_SHORT).show();
             addList(inputText);
@@ -225,5 +271,11 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         Cursor cursor = mdbHelper.fetchAllItems(list);
         this.mDataAdapter.changeCursor(cursor);
+    }
+
+    @Override
+    protected void onPause() {
+        mSensorManager.unregisterListener(mSensorListener);
+        super.onPause();
     }
 }

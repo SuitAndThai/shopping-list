@@ -23,7 +23,7 @@ import java.util.*;
 public class SQLiteHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "comments.db";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 1;
 
     public SQLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -57,9 +57,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
 
         //get size of the list
-        int listId = newItem.listId;
-        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
-                DBConstants.ItemsCols._SHOPPING_LIST_ID + "=?", new String[]{String.valueOf(listId)}
+        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, new String[]{DBConstants.ItemsCols._ID, DBConstants.ItemsCols.NAME, DBConstants.ItemsCols.STATUS, DBConstants.ItemsCols.ITEM_ORDER, DBConstants.ItemsCols._SHOPPING_LIST_ID},
+                DBConstants.ItemsCols._SHOPPING_LIST_ID + "=?", new String[]{String.valueOf(newItem.listId)}
                 , null, null, null);
         int count;
 
@@ -71,6 +70,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         } finally {
             cursor.close();
         }
+
         values.put(DBConstants.ItemsCols._SHOPPING_LIST_ID, newItem.listId);
         values.put(DBConstants.ItemsCols.NAME, newItem.name);
         values.put(DBConstants.ItemsCols.ITEM_ORDER, count);
@@ -83,7 +83,23 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     public int toggleItem(Item newItem) {
         Item item = new Item(newItem);
-        item.status = Math.abs(item.status - 1);
+
+        SQLiteDatabase db = open();
+        ContentValues values = new ContentValues();
+        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, new String[]{DBConstants.ItemsCols._ID, DBConstants.ItemsCols.NAME, DBConstants.ItemsCols.STATUS, DBConstants.ItemsCols.ITEM_ORDER, DBConstants.ItemsCols._SHOPPING_LIST_ID},
+                DBConstants.ItemsCols._ID + "=?", new String[]{String.valueOf(item.id)}
+                , null, null, null);
+        cursor.moveToNext();
+
+        item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
+        item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
+        item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
+        item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
+        int old_status = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
+        item.status = Math.abs(old_status - 1);
+
+        db.close();
+
         return updateItem(item);
     }
 
@@ -116,10 +132,19 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      */
     public Cursor fetchAllItems(ShoppingList list) {
         SQLiteDatabase db = open();
-        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, new String[]{DBConstants.ItemsCols._ID, DBConstants.ItemsCols.NAME},
+        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
                 DBConstants.ItemsCols._SHOPPING_LIST_ID + "=?", new String[]{String.valueOf(list.id)}
-                , null, null, null);
+                , null, null, DBConstants.ItemsCols.ITEM_ORDER);
         return cursor;
+    }
+
+    public boolean doesItemExist(String name) {
+        SQLiteDatabase db = open();
+        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
+                DBConstants.ItemsCols.NAME + "=?", new String[]{String.valueOf(name)}
+                , null, null, DBConstants.ItemsCols.ITEM_ORDER);
+
+        return cursor.getCount() > 0;
     }
 
     /*
@@ -174,20 +199,23 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         Cursor cursorFavorites = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
-                DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.IS_FAVORITE)}
+                DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.FAVORITE)}
                 , null, null, null);
         Cursor cursorUnfavorites = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
                 DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.UNFAVORITE)}
                 , null, null, null);
 
+        SortedMap<String, ShoppingList> favoriteLists = new TreeMap<String, ShoppingList>();
+        SortedMap<String, ShoppingList> unfavoriteLists = new TreeMap<String, ShoppingList>();
+
         if ((cursorFavorites == null) || (cursorUnfavorites == null)) {
             throw new RuntimeException();
         }
         try {
-            SortedMap<String, ShoppingList> favoriteLists = new TreeMap<String, ShoppingList>();
-            SortedMap<String, ShoppingList> unfavoriteLists = new TreeMap<String, ShoppingList>();
 
-            while (cursorFavorites.moveToNext()) {
+            cursorFavorites.moveToFirst();
+
+            while(cursorFavorites.moveToNext()) {
                 ShoppingList list = new ShoppingList();
                 list.id = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
                 list.title = cursorFavorites.getString(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
@@ -196,6 +224,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 favoriteLists.put(list.title, list);
             }
 
+            cursorUnfavorites.moveToFirst();
             while (cursorUnfavorites.moveToNext()) {
                 ShoppingList list = new ShoppingList();
                 list.id = cursorUnfavorites.getInt(cursorUnfavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
@@ -205,79 +234,74 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 unfavoriteLists.put(list.title, list);
             }
 
-            int i = 0;
-            SortedSet<String> favoriteKeys = new TreeSet<String>(favoriteLists.keySet());
-            for (String title : favoriteKeys) {
-                favoriteLists.get(title).order = i;
-                i++;
-                updateList(favoriteLists.get(title));
-            }
-
-            SortedSet<String> unfavoriteKeys = new TreeSet<String>(unfavoriteLists.keySet());
-            for (String title : unfavoriteKeys) {
-                unfavoriteLists.get(title).order = i;
-                i++;
-                updateList(unfavoriteLists.get(title));
-            }
         } finally {
             cursorFavorites.close();
             cursorUnfavorites.close();
         }
 
         db.close();
+
+        int i = 0;
+        SortedSet<String> unfavoriteKeys = new TreeSet<String>(unfavoriteLists.keySet());
+        SortedSet<String> favoriteKeys = new TreeSet<String>(favoriteLists.keySet());
+        for (String title : favoriteKeys) {
+            favoriteLists.get(title).order = i;
+            i++;
+            updateList(favoriteLists.get(title));
+        }
+        for (String title : unfavoriteKeys) {
+            unfavoriteLists.get(title).order = i;
+            i++;
+            updateList(unfavoriteLists.get(title));
+        }
     }
 
     public void orderListItems(ShoppingList list) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = fetchAllItems(list);
 
-        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
-                DBConstants.ItemsCols._SHOPPING_LIST_ID + "=?", new String[]{String.valueOf(list.id)}
-                , null, null, null);
+        SortedMap<String, Item> unboughtItems = new TreeMap<String, Item>();
+        SortedMap<String, Item> boughtItems = new TreeMap<String, Item>();
 
         if (cursor == null) {
             throw new RuntimeException();
         }
         try {
-            ArrayList<Item> itemList = new ArrayList<Item>();
-            while (cursor.moveToNext()) {
+            cursor.moveToFirst();
+
+            do {
                 Item item = new Item();
                 item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
                 item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
                 item.status = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
                 item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
                 item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
-                itemList.add(item);
-            }
 
-            SortedMap<String, Item> unboughtItems = new TreeMap<String, Item>();
-            SortedMap<String, Item> boughtItems = new TreeMap<String, Item>();
-            for (Item item : itemList) {
-                if (item.status == 1) {
+                if (item.status == Item.BOUGHT) {
                     boughtItems.put(item.name, item);
                 } else {
                     unboughtItems.put(item.name, item);
                 }
-            }
-
-            int i = 0;
-            SortedSet<String> unboughtKeys = new TreeSet<String>(unboughtItems.keySet());
-            for (String name : unboughtKeys) {
-                unboughtItems.get(name).order = i;
-                i++;
-                updateItem(unboughtItems.get(name));
-            }
-
-            SortedSet<String> boughtKeys = new TreeSet<String>(boughtItems.keySet());
-            for (String name : boughtKeys) {
-                boughtItems.get(name).order = i;
-                i++;
-                updateItem(boughtItems.get(name));
-            }
+            } while (cursor.moveToNext());
         } finally {
             cursor.close();
         }
 
-        db.close();
+        int i = 0;
+        SortedSet<String> unboughtKeys = new TreeSet<String>(unboughtItems.keySet());
+        SortedSet<String> boughtKeys = new TreeSet<String>(boughtItems.keySet());
+
+        for (String name : unboughtKeys) {
+            Item item = new Item(unboughtItems.get(name));
+            item.order = i;
+            i++;
+            updateItem(item);
+        }
+        for (String name : boughtKeys) {
+            Item item = new Item(boughtItems.get(name));
+            item.order = i;
+            i++;
+            updateItem(item);
+        }
     }
 
     public int toggleFavorite(ShoppingList list) {

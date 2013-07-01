@@ -8,7 +8,7 @@ package com.example.model;
  * To change this template use File | Settings | File Templates.
  */
 public class Item {
-    public static int IS_BOUGHT = 1;
+    public static int BOUGHT = 1;
     public static int UNBOUGHT = 0;
 
     public int id;
