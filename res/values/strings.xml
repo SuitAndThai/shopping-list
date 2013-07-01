@@ -12,4 +12,6 @@
     <string name="new_list_button">Add List</string>
     <string name="left_arrow"><![CDATA[<]]></string>
     <string name="right_arrow"><![CDATA[>]]></string>
+    <string name="delete_ze_list">Delete ze lizt?</string>
+    <string name="delete">Delete</string>
 </resources>

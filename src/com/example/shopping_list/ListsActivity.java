@@ -1,7 +1,10 @@
 package com.example.shopping_list;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -37,7 +40,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     private SQLiteHelper mdbHelper;
     private int currentListOrder = 0;
     private Button prevList;
-    private ImageView favButton;
+    private Button favButton;
     private EditText listTitle;
     private Button nextList;
     private ListView listView;
@@ -66,7 +69,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         // Finding our layout elements
         prevList = (Button) findViewById(R.id.left_arrow_button);
-        favButton = (ImageView) findViewById(R.id.favorite);
+        favButton = (Button) findViewById(R.id.favorite);
         listTitle = (EditText) findViewById(R.id.list_title_edit_text);
         nextList = (Button) findViewById(R.id.right_arrow_button);
         listView = (ListView) findViewById(R.id.item_info_list_view);
@@ -103,16 +106,6 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
             }
         });
 
-        // set alpha depending if we're a favorite or not
-
-        // click will toggle favorite
-        favButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //if the list is not a favorite, make it so
-                // same vice versa
-            }
-        });
 
         listTitle.setSingleLine();
         listTitle.setCursorVisible(false);
@@ -138,7 +131,6 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                         v.setText(list.title);
                     } else {
                         list = mdbHelper.getList(currentListOrder);
-//                        mdbHelper.renameList(list, input);
                         list.title = input;
                         mdbHelper.updateList(list);
                     }
@@ -152,6 +144,13 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                     return true;
                 }
                 return false;
+            }
+        });
+        listTitle.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                deleteListDialog();
+                return true;
             }
         });
 
@@ -173,6 +172,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         //Generate ListView from SQLite Database
         displayListView(this.currentListOrder);
+        refreshView();
 
         // Getting sensor manager
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -180,6 +180,51 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         mAccel = 0.00f;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccelLast = SensorManager.GRAVITY_EARTH;
+    }
+
+    private void deleteListDialog() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                ListsActivity.this);
+
+        String dialogTitle = getResources().getString(R.string.delete_ze_list);
+        String positiveText = getResources().getString(R.string.delete);
+        String negativeText = getResources().getString(R.string.cancel);
+
+
+        // set title
+        alertDialogBuilder.setTitle(dialogTitle);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton(positiveText, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        mdbHelper.deleteList(currentListOrder);
+
+                        // check if we need to update the current list order
+                        if (!mdbHelper.listExists(currentListOrder)) {
+
+                            // if it doesn't exist, check to see if there's something previous
+                             if (mdbHelper.listExists(currentListOrder - 1)) {
+                                 currentListOrder = currentListOrder - 1;
+                             }
+                        }
+                        displayListView(currentListOrder);
+                        refreshView();
+//                        finish();
+                    }
+                })
+                .setNegativeButton(negativeText, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
     }
 
     private final SensorEventListener mSensorListener = new SensorEventListener() {
@@ -206,16 +251,19 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     private void toggleFavorite() {
         ShoppingList list = mdbHelper.getList(currentListOrder);
         if (list.favorite == ShoppingList.FAVORITE) {
-            Toast.makeText(this, "a favorite", Toast.LENGTH_SHORT).show();
-            favButton.setAlpha(200);
+            Drawable d = getResources().getDrawable(R.drawable.snowflake_transparent_2);
+            favButton.setBackground(d);
+            list.favorite = ShoppingList.UNFAVORITE;
+        } else {
+            Drawable d = getResources().getDrawable(R.drawable.snowflake);
+            favButton.setBackground(d);
+            list.favorite = ShoppingList.FAVORITE;
         }
-        else {
-            Toast.makeText(this, "not a favorite", Toast.LENGTH_SHORT).show();
-            favButton.setAlpha(200);
-        }
-        // actually set the favorite
 
-        // don't forget to switch it when another list is toggled
+        mdbHelper.updateList(list);
+        mdbHelper.orderLists();
+        ShoppingList newList = mdbHelper.getList(list.title);
+        currentListOrder = newList.order;
     }
 
     private void isShaking() {
@@ -244,10 +292,13 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         //create a list based on the text
         ShoppingList newList = new ShoppingList();
         newList.title = title;
-        this.currentListOrder = mdbHelper.addList(newList);
+        mdbHelper.addList(newList);
+        ShoppingList list = mdbHelper.getList(title);
+        currentListOrder = list.order;
 
         displayListView(this.currentListOrder);
         refreshView();
+
     }
 
     private void addItem(String name) {
@@ -374,6 +425,11 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         Cursor cursor = mdbHelper.fetchAllItems(list);
         this.mDataAdapter.changeCursor(cursor);
+        if (list.favorite == ShoppingList.FAVORITE) {
+            favButton.setBackground(getResources().getDrawable(R.drawable.snowflake));
+        } else {
+            favButton.setBackground(getResources().getDrawable(R.drawable.snowflake_transparent_2));
+        }
     }
 
     @Override

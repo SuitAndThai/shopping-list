@@ -13,16 +13,18 @@
                 android:text="@string/left_arrow"
                 android:layout_alignParentLeft="true"
                 android:id="@+id/left_arrow_button"/>
-        <ImageView
+        <Button
                 android:layout_width="50dip"
                 android:layout_height="50dip"
+                android:layout_margin="0dip"
+                android:padding="0dip"
                 android:id="@+id/favorite"
                 android:layout_gravity="center"
-                android:scaleType="centerInside"
-                android:src="@drawable/snowflake"
-                android:clickable="true"
+                android:scaleType="fitCenter"
                 android:layout_toRightOf="@+id/left_arrow_button"
-                android:layout_alignTop="@+id/left_arrow_button"/>
+                android:layout_alignTop="@+id/left_arrow_button" android:background="@drawable/snowflake_transparent_2"
+                android:contentDescription="snowflake app"
+                android:visibility="visible"/>
         <EditText
                 style="@android:style/TextAppearance.Large"
                 android:layout_width="match_parent"

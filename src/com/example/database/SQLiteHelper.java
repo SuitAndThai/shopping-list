@@ -188,10 +188,38 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return list_order;
     }
 
-    public void deleteList(ShoppingList list) {
+    public void deleteList(int order) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(DBConstants.ShoppingListsCols.TABLE_NAME, DBConstants.ShoppingListsCols._ID + " = ?",
-                new String[]{String.valueOf(list.id)});
+//        ShoppingList list = new ShoppingList(getList(order));
+//        Cursor cursor = fetchAllItems(list);
+//        if (cursor == null) {
+//            throw new RuntimeException();
+//        }
+//        try {
+//            if (cursor.getCount() > 0) {
+//                cursor.moveToFirst();
+//                do {
+//                    Item item = new Item();
+//                    item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
+////                    item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
+//                    item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
+////                    item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
+////                    item.status = Math.abs(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
+//
+//                    if (item.listId == list.id) {
+//                        deleteItem(item);
+//                    }
+//
+//                } while (cursor.moveToNext());
+//            }
+//
+//
+//        } finally {
+//
+//        }
+        db.delete(DBConstants.ShoppingListsCols.TABLE_NAME, DBConstants.ShoppingListsCols.LIST_ORDER + " = ?",
+                new String[]{String.valueOf(order)});
+        orderLists();
         db.close();
     }
 
@@ -272,21 +300,22 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         }
         try {
             cursor.moveToFirst();
+            if (cursor.getCount() > 0) {
+                do {
+                    Item item = new Item();
+                    item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
+                    item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
+                    item.status = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
+                    item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
+                    item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
 
-            do {
-                Item item = new Item();
-                item.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._ID));
-                item.name = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.NAME));
-                item.status = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.STATUS));
-                item.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols.ITEM_ORDER));
-                item.listId = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ItemsCols._SHOPPING_LIST_ID));
-
-                if (item.status == Item.BOUGHT) {
-                    boughtItems.put(item.name, item);
-                } else {
-                    unboughtItems.put(item.name, item);
-                }
-            } while (cursor.moveToNext());
+                    if (item.status == Item.BOUGHT) {
+                        boughtItems.put(item.name, item);
+                    } else {
+                        unboughtItems.put(item.name, item);
+                    }
+                } while (cursor.moveToNext());
+            }
         } finally {
             cursor.close();
         }
@@ -345,6 +374,30 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
                 DBConstants.ShoppingListsCols.LIST_ORDER + "=?", new String[]{String.valueOf(order)}
                 , null, null, null);
+        ShoppingList list = new ShoppingList();
+        if (cursor == null) {
+            throw new RuntimeException();
+        }
+        try {
+            if (cursor.moveToFirst()) {
+                list.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
+                list.title = cursor.getString(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
+                list.favorite = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.IS_FAVORITE));
+                list.order = cursor.getInt(cursor.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.LIST_ORDER));
+            }
+        } finally {
+            cursor.close();
+            db.close();
+            return list;
+        }
+    }
+
+    public ShoppingList getList(String title) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = db.query(DBConstants.ShoppingListsCols.TABLE_NAME, null,
+                DBConstants.ShoppingListsCols.TITLE + "=?", new String[]{title}
+                , null, null, null);
         if (cursor == null) {
             throw new RuntimeException();
         }
@@ -363,7 +416,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         } finally {
             cursor.close();
         }
-
     }
 
     public boolean listExists(String title) {
@@ -441,7 +493,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 DBConstants.ShoppingListsCols.IS_FAVORITE + "=?", new String[]{String.valueOf(ShoppingList.UNFAVORITE)}
                 , null, null, null);
 
-       ArrayList<ShoppingList> listArray = new ArrayList<ShoppingList>();
+        ArrayList<ShoppingList> listArray = new ArrayList<ShoppingList>();
 
         if ((cursorFavorites == null) || (cursorUnfavorites == null)) {
             throw new RuntimeException();
@@ -450,7 +502,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
             cursorFavorites.moveToFirst();
 
-            while(cursorFavorites.moveToNext()) {
+            while (cursorFavorites.moveToNext()) {
                 ShoppingList list = new ShoppingList();
                 list.id = cursorFavorites.getInt(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols._ID));
                 list.title = cursorFavorites.getString(cursorFavorites.getColumnIndexOrThrow(DBConstants.ShoppingListsCols.TITLE));
