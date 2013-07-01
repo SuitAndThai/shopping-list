@@ -20,7 +20,7 @@
                   android:label="@string/app_name"/>
         <activity android:name=".ChooseLists"
                   android:label="@string/app_name"/>
-        <activity android:name=".TransRecvActivity"
+        <activity android:name=".RecipesActivity"
                   android:label="@string/app_name"/>
 
     </application>
