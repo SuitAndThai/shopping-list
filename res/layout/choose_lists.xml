@@ -13,5 +13,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add to selected list"
-            android:id="@+id/add_to_list_button" android:layout_gravity="center"/>
+            android:id="@+id/add_to_list_button"
+            android:layout_gravity="center"
+            android:onClick="addToLists"/>
 </LinearLayout>
