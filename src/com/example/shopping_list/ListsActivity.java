@@ -1,14 +1,21 @@
 package com.example.shopping_list;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import com.example.database.DBConstants;
 import com.example.database.ItemAdapter;
@@ -32,7 +39,10 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     private ItemAdapter mDataAdapter;
     private SQLiteHelper mdbHelper;
     private int currentListOrder = 0;
-    private TextView listTitle;
+    private Button prevList;
+    private Button favButton;
+    private EditText listTitle;
+    private Button nextList;
     private ListView listView;
     private Context context;
     private SensorManager mSensorManager;
@@ -58,13 +68,92 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         mdbHelper = new SQLiteHelper(this);
 
         // Finding our layout elements
-        listTitle = (TextView) findViewById(R.id.list_title_text_view);
+        prevList = (Button) findViewById(R.id.left_arrow_button);
+        favButton = (Button) findViewById(R.id.favorite);
+        listTitle = (EditText) findViewById(R.id.list_title_edit_text);
+        nextList = (Button) findViewById(R.id.right_arrow_button);
         listView = (ListView) findViewById(R.id.item_info_list_view);
         final Button addItemButton = (Button) findViewById(R.id.add_item_button);
         final Button addListButton = (Button) findViewById(R.id.add_list_button);
-        final Button shakeButton = (Button) findViewById(R.id.shake_button);
 
         // Set our button listeners to open dialogs
+        prevList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mdbHelper.listExists(currentListOrder - 1)) {
+                    currentListOrder = currentListOrder - 1;
+                    displayListView(currentListOrder);
+                    refreshView();
+                }
+            }
+        });
+
+        nextList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mdbHelper.listExists(currentListOrder + 1)) {
+                    currentListOrder = currentListOrder + 1;
+                    displayListView(currentListOrder);
+                    refreshView();
+                }
+            }
+        });
+
+        favButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleFavorite();
+            }
+        });
+
+
+        listTitle.setSingleLine();
+        listTitle.setCursorVisible(false);
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        listTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listTitle.setCursorVisible(true);
+            }
+        });
+        listTitle.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (EditorInfo.IME_ACTION_DONE == actionId) {
+                    // get text
+                    String input = v.getText().toString();
+
+                    // check to see if it already exists
+                    ShoppingList list;
+                    if (mdbHelper.listExists(input)) {
+                        list = mdbHelper.getList(currentListOrder);
+                        Toast.makeText(context, input + " already exists", Toast.LENGTH_SHORT);
+                        v.setText(list.title);
+                    } else {
+                        list = mdbHelper.getList(currentListOrder);
+                        list.title = input;
+                        mdbHelper.updateList(list);
+                    }
+                    v.setSelected(false);
+                    v.setCursorVisible(false);
+
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+                    mdbHelper.orderLists();
+                    return true;
+                }
+                return false;
+            }
+        });
+        listTitle.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                deleteListDialog();
+                return true;
+            }
+        });
+
         addItemButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -81,15 +170,9 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
             }
         });
 
-        shakeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isShaking();
-            }
-        });
-
         //Generate ListView from SQLite Database
         displayListView(this.currentListOrder);
+        refreshView();
 
         // Getting sensor manager
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -97,6 +180,51 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         mAccel = 0.00f;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccelLast = SensorManager.GRAVITY_EARTH;
+    }
+
+    private void deleteListDialog() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                ListsActivity.this);
+
+        String dialogTitle = getResources().getString(R.string.delete_ze_list);
+        String positiveText = getResources().getString(R.string.delete);
+        String negativeText = getResources().getString(R.string.cancel);
+
+
+        // set title
+        alertDialogBuilder.setTitle(dialogTitle);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton(positiveText, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        mdbHelper.deleteList(currentListOrder);
+
+                        // check if we need to update the current list order
+                        if (!mdbHelper.listExists(currentListOrder)) {
+
+                            // if it doesn't exist, check to see if there's something previous
+                             if (mdbHelper.listExists(currentListOrder - 1)) {
+                                 currentListOrder = currentListOrder - 1;
+                             }
+                        }
+                        displayListView(currentListOrder);
+                        refreshView();
+//                        finish();
+                    }
+                })
+                .setNegativeButton(negativeText, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
     }
 
     private final SensorEventListener mSensorListener = new SensorEventListener() {
@@ -120,11 +248,30 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         }
     };
 
+    private void toggleFavorite() {
+        ShoppingList list = mdbHelper.getList(currentListOrder);
+        if (list.favorite == ShoppingList.FAVORITE) {
+            Drawable d = getResources().getDrawable(R.drawable.snowflake_transparent_2);
+            favButton.setBackground(d);
+            list.favorite = ShoppingList.UNFAVORITE;
+        } else {
+            Drawable d = getResources().getDrawable(R.drawable.snowflake);
+            favButton.setBackground(d);
+            list.favorite = ShoppingList.FAVORITE;
+        }
+
+        mdbHelper.updateList(list);
+        mdbHelper.orderLists();
+        ShoppingList newList = mdbHelper.getList(list.title);
+        currentListOrder = newList.order;
+    }
+
     private void isShaking() {
-        Toast.makeText(getApplicationContext(), "shaking", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "let's shuffle it a bit", Toast.LENGTH_LONG).show();
 
         ShoppingList list = mdbHelper.getList(currentListOrder);
         mdbHelper.orderListItems(list);
+        displayListView(currentListOrder);
         refreshView();
     }
 
@@ -145,10 +292,13 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         //create a list based on the text
         ShoppingList newList = new ShoppingList();
         newList.title = title;
-        this.currentListOrder = mdbHelper.addList(newList);
+        mdbHelper.addList(newList);
+        ShoppingList list = mdbHelper.getList(title);
+        currentListOrder = list.order;
 
         displayListView(this.currentListOrder);
         refreshView();
+
     }
 
     private void addItem(String name) {
@@ -249,13 +399,17 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                 addItem(inputText);
             }
         } else if (ADD_OBJECT == LIST_OBJECT) {
-            Toast.makeText(this, "Started list " + inputText, Toast.LENGTH_SHORT).show();
-            addList(inputText);
+            if (mdbHelper.listExists(inputText)) {
+                Toast.makeText(this, inputText + " already exists", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Started list " + inputText, Toast.LENGTH_SHORT).show();
+                addList(inputText);
+            }
         } else {
             Toast.makeText(this, "I can't tell if this is an ITEM or a LIST.", Toast.LENGTH_SHORT).show();
         }
-
         ADD_OBJECT = DEFAULT_OBJECT;
+//        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
     private void refreshView() {
@@ -271,6 +425,11 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         Cursor cursor = mdbHelper.fetchAllItems(list);
         this.mDataAdapter.changeCursor(cursor);
+        if (list.favorite == ShoppingList.FAVORITE) {
+            favButton.setBackground(getResources().getDrawable(R.drawable.snowflake));
+        } else {
+            favButton.setBackground(getResources().getDrawable(R.drawable.snowflake_transparent_2));
+        }
     }
 
     @Override

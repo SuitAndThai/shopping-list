@@ -4,17 +4,49 @@
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
               android:orientation="vertical">
-    <TextView
-            style="@android:style/TextAppearance.Large"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/list_title_text_view"/>
+    <RelativeLayout android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+        <Button
+                android:layout_width="50dip"
+                android:layout_height="wrap_content"
+                android:text="@string/left_arrow"
+                android:layout_alignParentLeft="true"
+                android:id="@+id/left_arrow_button"/>
+        <Button
+                android:layout_width="50dip"
+                android:layout_height="50dip"
+                android:layout_margin="0dip"
+                android:padding="0dip"
+                android:id="@+id/favorite"
+                android:layout_gravity="center"
+                android:scaleType="fitCenter"
+                android:layout_toRightOf="@+id/left_arrow_button"
+                android:layout_alignTop="@+id/left_arrow_button" android:background="@drawable/snowflake_transparent_2"
+                android:contentDescription="snowflake app"
+                android:visibility="visible"/>
+        <EditText
+                style="@android:style/TextAppearance.Large"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:imeOptions="actionDone"
+                android:layout_toRightOf="@+id/favorite"
+                android:layout_alignTop="@+id/favorite"
+                android:id="@+id/list_title_edit_text"/>
+        <Button
+                android:layout_width="50dip"
+                android:layout_height="wrap_content"
+                android:text="@string/right_arrow"
+                android:layout_alignParentRight="true"
+                android:id="@+id/right_arrow_button"/>
+    </RelativeLayout>
 
-    <ListView xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/item_info_list_view"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:layout_weight="1"/>
+    <ListView
+            android:id="@+id/item_info_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
 
     <LinearLayout android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
@@ -34,14 +66,5 @@
                 android:gravity="top"
                 android:layout_weight="1"
                 android:id="@+id/add_item_button"/>
-
-        <Button
-                android:layout_margin="10dip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="SHAKE"
-                android:gravity="top|right"
-                android:layout_weight="1"
-                android:id="@+id/shake_button"/>
     </LinearLayout>
 </LinearLayout>

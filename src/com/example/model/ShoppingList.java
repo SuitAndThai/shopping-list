@@ -20,7 +20,14 @@ public class ShoppingList {
 
     }
 
-    public ShoppingList(String title){
+    public ShoppingList(ShoppingList list) {
+        this.id = list.id;
+        this.title = list.title;
+        this.favorite = list.favorite;
+        this.order = list.order;
+    }
+
+    public ShoppingList(String title) {
 
         this.title = title;
         favorite = 0;
