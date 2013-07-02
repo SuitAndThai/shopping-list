@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.*;
 import com.example.database.DBConstants;
 import com.example.database.SQLiteHelper;
+import com.example.model.Item;
+import com.example.model.ShoppingList;
 
 import java.util.ArrayList;
 
@@ -38,9 +40,8 @@ public class ChooseLists extends Activity {
         listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
         final Button addToListButton = (Button) findViewById(R.id.add_to_list_button);
 
-        itemsList = new ArrayList<String>();
         Intent intent = getIntent();
-        itemsList = intent.getStringArrayListExtra(MainActivity.ITEM_INTENT);
+        itemsList = new ArrayList<String>(intent.getStringArrayListExtra(MainActivity.ITEM_INTENT));
 
         mdbHelper = new SQLiteHelper(this);
 
@@ -78,14 +79,6 @@ public class ChooseLists extends Activity {
                     }
                 });
             }
-//
-//            @Override
-//            public View newView(Context context, final Cursor cursor, ViewGroup parent) {
-//
-//                View v = super.newView(context, cursor, parent);
-//
-//                return v;
-//            }
         };
 
         // Assign adapter to ListView
@@ -93,25 +86,34 @@ public class ChooseLists extends Activity {
     }
 
     public void addToLists(View view) {
-        ArrayList<Integer> checkedOrder = new ArrayList<Integer>();
-        int listCount = listView.getCount();
-        Log.d("listCount: ", listCount + "");
+//        int listCount = listView.getCount();
+//        Log.d("listCount: ", listCount + "");
+//        Log.d("chooselists: size of bool array is ", String.valueOf(sparseBooleanArray.size()));
 
-        String s = "";
-
-        Log.d("SparseBooleanArraySize: ", String.valueOf(sparseBooleanArray.size()));
-
+        Log.d("chooselists", "clicked the add button");
         for (int i = 0; i < sparseBooleanArray.size(); i++) {
-            if (sparseBooleanArray.get(i)) {
+            int key = sparseBooleanArray.keyAt(i);
+            if (sparseBooleanArray.get(key)) {
+                ShoppingList list = new ShoppingList(mdbHelper.getList(key));
 
-                  checkedOrder.add(i);
+                Item item = new Item();
+                item.listId = list.id;
+
+                for (String name : itemsList) {
+                    Log.d("chooselists", "adding " + name + " to the list");
+                    item.name = name;
+                    if (!mdbHelper.itemExists(item)) {
+                        mdbHelper.addItem(item);
+                        Log.d("chooselists", "added " + name + " successfully");
+                    }
+                }
             }
-            Log.d("chooselists", "checked item"+i+" is " + sparseBooleanArray.get(i));
-//            Toast.makeText(this, "checked item is " + sparseBooleanArray.get(i), Toast.LENGTH_SHORT).show();
         }
 
+        Intent resultIntent = new Intent();
+        setResult(Activity.RESULT_OK, resultIntent);
+        finish();
     }
-
 
 
 }

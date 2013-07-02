@@ -15,6 +15,7 @@ public class MainActivity extends SherlockActivity {
     public static int BARCODE_REQUEST = 10001;
     public static int RECIPES_REQUEST = 10002;
     public static int SCAN_SUCCESS_REQUEST = 10003;
+    public static int ADD_REQUEST = 10004;
     public static final String ITEM_INTENT = "ITEM_INTENT";
 
     /**
