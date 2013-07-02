@@ -22,6 +22,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+
+
+
         final Button lists_button = (Button) findViewById(R.id.lists_button);
         final Button barcode_button = (Button) findViewById(R.id.barcode_button);
         final Button transfer_button = (Button) findViewById(R.id.add_recipe_button);
@@ -50,6 +53,8 @@ public class MainActivity extends Activity {
             }
         });
     }
+
+
 
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         //lists button

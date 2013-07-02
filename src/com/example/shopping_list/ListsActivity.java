@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
@@ -13,6 +14,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -42,17 +44,24 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     protected float accelLast; // last acceleration including gravity
     protected static final float threshold = 10f;
 
+
     // TODO: A quick hack, we need to use SharedPreferences instead though
     protected int ADD_OBJECT = -1;
     protected static int DEFAULT_OBJECT = -1;
     protected static int ITEM_OBJECT = 0;
     protected static int LIST_OBJECT = 1;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Typical Activity calls
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lists_pager);
+
+        android.app.ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+
         this.context = this.getApplicationContext();
 
         // connect to the database
@@ -89,6 +98,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                 }
             }
         });
+
 
         favButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -173,6 +183,18 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+        switch (menuItem.getItemId()) {
+            case android.R.id.home:
+                Intent homeIntent = new Intent(this, MainActivity.class);
+                homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(homeIntent);
+        }
+        return (super.onOptionsItemSelected(menuItem));
+    }
+
 
     private void deleteListDialog() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
