@@ -1,6 +1,5 @@
 package com.example.shopping_list;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,8 +7,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import com.actionbarsherlock.app.SherlockActivity;
 
-public class MainActivity extends Activity {
+public class MainActivity extends SherlockActivity {
     public static String mt = "main-tag";
     public static int LISTS_REQUEST = 10000;
     public static int BARCODE_REQUEST = 10001;
@@ -24,6 +24,8 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         final Button lists_button = (Button) findViewById(R.id.lists_button);
         final Button barcode_button = (Button) findViewById(R.id.barcode_button);
