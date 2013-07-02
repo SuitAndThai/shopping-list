@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
@@ -108,6 +109,8 @@ public class ChooseLists extends Activity {
 //        Log.d("listCount: ", listCount + "");
 //        Log.d("chooselists: size of bool array is ", String.valueOf(sparseBooleanArray.size()));
 
+        StringBuilder s = new StringBuilder();
+
         Log.d("chooselists", "clicked the add button");
         for (int i = 0; i < sparseBooleanArray.size(); i++) {
             int key = sparseBooleanArray.keyAt(i);
@@ -117,8 +120,9 @@ public class ChooseLists extends Activity {
                 Item item = new Item();
                 item.listId = list.id;
 
+
                 for (String name : itemsList) {
-                    Log.d("chooselists", "adding " + name + " to the list");
+                    s.append(name);
                     item.name = name;
                     if (!mdbHelper.itemExists(item)) {
                         mdbHelper.addItem(item);
@@ -128,9 +132,20 @@ public class ChooseLists extends Activity {
             }
         }
 
+        Context context = getApplicationContext();
+        CharSequence text = s.toString() + "has been added successfully";
+        int duration = Toast.LENGTH_LONG;
+
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+
         Intent resultIntent = new Intent();
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
+
+
+
     }
 
 

@@ -11,11 +11,10 @@
             android:layout_height="wrap_content"
             android:text="@string/scanned_item"
             android:id="@+id/item_name"
-            android:layout_weight="1"
             android:layout_gravity="center"/>
     <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="400dip"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
             android:scaleType="fitCenter"
             android:id="@+id/item_image"
             android:layout_weight="1"
