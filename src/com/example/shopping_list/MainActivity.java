@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -18,9 +17,6 @@ public class MainActivity extends Activity {
     public static int ADD_REQUEST = 10004;
     public static final String ITEM_INTENT = "ITEM_INTENT";
 
-    /**
-     * Called when the activity is first created.
-     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +52,7 @@ public class MainActivity extends Activity {
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        //lists button
         if (requestCode == LISTS_REQUEST) {
             if (resultCode == RESULT_OK) {
                 Log.d(mt, "Result OK");
@@ -63,16 +60,13 @@ public class MainActivity extends Activity {
                 Log.d(mt, "Result Cancelled");
             }
         } else if (requestCode == BARCODE_REQUEST) {
+            // barcode button
             if (resultCode == RESULT_OK) {
                 Log.d(mt, "Result OK");
                 String contents = intent.getStringExtra("SCAN_RESULT");
                 String format = intent.getStringExtra("SCAN_RESULT_FORMAT");
 
-                Toast toast = Toast.makeText(this, "Content:" + contents + " Format:" + format , Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.TOP, 25, 400);
-                toast.show();
                 // Handle successful scan
-
                 Intent i = new Intent(getApplicationContext(), ScanSuccessActivity.class);
                 i.putExtra("CONTENT", contents);
                 i.putExtra("FORMAT", format);
@@ -81,6 +75,7 @@ public class MainActivity extends Activity {
                 Log.d(mt, "Result Cancelled");
             }
         } else if (requestCode == RECIPES_REQUEST) {
+            //recipes button
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, "Recipe added", Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_CANCELED) {

@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
         >
     <Button
-            android:layout_width="fill_parent"
+            style="@android:style/TextAppearance.Large"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dip"
+            android:layout_margin="15dip"
             android:text="@string/lists"
             android:id="@+id/lists_button"/>
     <Button
-            android:layout_width="fill_parent"
+            style="@android:style/TextAppearance.Large"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dip"
+            android:layout_margin="15dip"
             android:text="@string/scan_barcode"
             android:id="@+id/barcode_button"/>
     <Button
-            android:layout_width="fill_parent"
+            style="@android:style/TextAppearance.Large"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dip"
+            android:layout_margin="15dip"
             android:text="@string/add_recipe"
             android:id="@+id/add_recipe_button"/>
 </LinearLayout>
-

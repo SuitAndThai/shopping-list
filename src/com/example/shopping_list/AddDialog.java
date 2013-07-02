@@ -9,10 +9,10 @@ import android.widget.TextView;
 
 public class AddDialog extends DialogFragment implements EditText.OnEditorActionListener {
 
-    private EditText mEditText;
+    protected EditText editText;
     public static int ADD_ITEM = 0;
     public static int ADD_LIST = 1;
-    private int mAddOption;
+    protected int addOption;
 
     public interface AddDialogListener {
 
@@ -25,29 +25,29 @@ public class AddDialog extends DialogFragment implements EditText.OnEditorAction
     }
 
     public AddDialog(int add_option) {
-        this.mAddOption = add_option;
+        this.addOption = add_option;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view;
-        if (ADD_ITEM == this.mAddOption) {
+        if (ADD_ITEM == this.addOption) {
             view = inflater.inflate(R.layout.dialog_add_item, container);
-            this.mEditText = (EditText) view.findViewById(R.id.add_item_edit_text);
-            this.mEditText.setSingleLine();
+            this.editText = (EditText) view.findViewById(R.id.add_item_edit_text);
+            this.editText.setSingleLine();
             getDialog().setTitle(getString(R.string.add_an_item));
         } else {
             view = inflater.inflate(R.layout.dialog_add_list, container);
-            this.mEditText = (EditText) view.findViewById(R.id.add_list_edit_text);
-            this.mEditText.setSingleLine();
+            this.editText = (EditText) view.findViewById(R.id.add_list_edit_text);
+            this.editText.setSingleLine();
             getDialog().setTitle(getString(R.string.add_list));
         }
 
         // show the soft keyboard programmatically
-        this.mEditText.requestFocus();
+        this.editText.requestFocus();
         getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        this.mEditText.setOnEditorActionListener(this);
+        this.editText.setOnEditorActionListener(this);
 
         return view;
     }
@@ -57,7 +57,7 @@ public class AddDialog extends DialogFragment implements EditText.OnEditorAction
         if (EditorInfo.IME_ACTION_DONE == actionId) {
             // return the input text to the activity
             AddDialogListener activity = (AddDialogListener) getActivity();
-            activity.onFinishAddDialog(this.mEditText.getText().toString());
+            activity.onFinishAddDialog(this.editText.getText().toString());
             this.dismiss();
             return true;
         }

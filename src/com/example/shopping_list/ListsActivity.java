@@ -3,6 +3,7 @@ package com.example.shopping_list;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
@@ -24,38 +25,28 @@ import com.example.model.Item;
 import com.example.model.ShoppingList;
 import com.example.shopping_list.AddDialog.AddDialogListener;
 
-/**
- * Created with IntelliJ IDEA.
- * User: rthai
- * Date: 6/24/13
- * Time: 11:25 AM
- * To change this template use File | Settings | File Templates.
- */
 public class ListsActivity extends FragmentActivity implements AddDialogListener {
-
-    public static final String EXTRA_MESSAGE = "Lists";
-
-    //    private SimpleCursorAdapter mDataAdapter;
-    private ItemAdapter mDataAdapter;
-    private SQLiteHelper mdbHelper;
-    private int currentListOrder = 0;
-    private Button prevList;
-    private Button favButton;
-    private EditText listTitle;
-    private Button nextList;
-    private ListView listView;
-    private Context context;
-    private SensorManager mSensorManager;
-    private float mAccel; // acceleration apart from gravity
-    private float mAccelCurrent; // current acceleration including gravity
-    private float mAccelLast; // last acceleration including gravity
-    private static final float mThreshold = 10f;
+    //    private SimpleCursorAdapter dataAdapter;
+    protected ItemAdapter dataAdapter;
+    protected SQLiteHelper dbHelper;
+    protected int currentListOrder = 0;
+    protected Button prevList;
+    protected Button favButton;
+    protected EditText listTitle;
+    protected Button nextList;
+    protected ListView listView;
+    protected Context context;
+    protected SensorManager sensorManager;
+    protected float accel; // acceleration apart from gravity
+    protected float accelCurrent; // current acceleration including gravity
+    protected float accelLast; // last acceleration including gravity
+    protected static final float threshold = 10f;
 
     // TODO: A quick hack, we need to use SharedPreferences instead though
-    private int ADD_OBJECT = -1;
-    private static int DEFAULT_OBJECT = -1;
-    private static int ITEM_OBJECT = 0;
-    private static int LIST_OBJECT = 1;
+    protected int ADD_OBJECT = -1;
+    protected static int DEFAULT_OBJECT = -1;
+    protected static int ITEM_OBJECT = 0;
+    protected static int LIST_OBJECT = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +56,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         this.context = this.getApplicationContext();
 
         // connect to the database
-        mdbHelper = new SQLiteHelper(this);
+        dbHelper = new SQLiteHelper(this);
 
         // Finding our layout elements
         prevList = (Button) findViewById(R.id.left_arrow_button);
@@ -80,7 +71,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         prevList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mdbHelper.listExists(currentListOrder - 1)) {
+                if (dbHelper.listExists(currentListOrder - 1)) {
                     currentListOrder = currentListOrder - 1;
                     displayListView(currentListOrder);
                     refreshView();
@@ -91,7 +82,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         nextList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mdbHelper.listExists(currentListOrder + 1)) {
+                if (dbHelper.listExists(currentListOrder + 1)) {
                     currentListOrder = currentListOrder + 1;
                     displayListView(currentListOrder);
                     refreshView();
@@ -105,7 +96,6 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                 toggleFavorite();
             }
         });
-
 
         listTitle.setSingleLine();
         listTitle.setCursorVisible(false);
@@ -125,14 +115,14 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
                     // check to see if it already exists
                     ShoppingList list;
-                    if (mdbHelper.listExists(input)) {
-                        list = mdbHelper.getList(currentListOrder);
+                    if (dbHelper.listExists(input)) {
+                        list = dbHelper.getList(currentListOrder);
                         Toast.makeText(context, input + " already exists", Toast.LENGTH_SHORT);
                         v.setText(list.title);
                     } else {
-                        list = mdbHelper.getList(currentListOrder);
+                        list = dbHelper.getList(currentListOrder);
                         list.title = input;
-                        mdbHelper.updateList(list);
+                        dbHelper.updateList(list);
                     }
                     v.setSelected(false);
                     v.setCursorVisible(false);
@@ -140,7 +130,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                     InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                     getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-                    mdbHelper.orderLists();
+                    dbHelper.orderLists();
                     return true;
                 }
                 return false;
@@ -175,11 +165,13 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         refreshView();
 
         // Getting sensor manager
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
-        mAccel = 0.00f;
-        mAccelCurrent = SensorManager.GRAVITY_EARTH;
-        mAccelLast = SensorManager.GRAVITY_EARTH;
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensorManager.registerListener(mSensorListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+        accel = 0.00f;
+        accelCurrent = SensorManager.GRAVITY_EARTH;
+        accelLast = SensorManager.GRAVITY_EARTH;
+
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     private void deleteListDialog() {
@@ -190,7 +182,6 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         String positiveText = getResources().getString(R.string.delete);
         String negativeText = getResources().getString(R.string.cancel);
 
-
         // set title
         alertDialogBuilder.setTitle(dialogTitle);
 
@@ -199,19 +190,18 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                 .setCancelable(false)
                 .setPositiveButton(positiveText, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        mdbHelper.deleteList(currentListOrder);
+                        dbHelper.deleteList(currentListOrder);
 
                         // check if we need to update the current list order
-                        if (!mdbHelper.listExists(currentListOrder)) {
+                        if (!dbHelper.listExists(currentListOrder)) {
 
                             // if it doesn't exist, check to see if there's something previous
-                            if (mdbHelper.listExists(currentListOrder - 1)) {
+                            if (dbHelper.listExists(currentListOrder - 1)) {
                                 currentListOrder = currentListOrder - 1;
                             }
                         }
                         displayListView(currentListOrder);
                         refreshView();
-//                        finish();
                     }
                 })
                 .setNegativeButton(negativeText, new DialogInterface.OnClickListener() {
@@ -227,19 +217,19 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         alertDialog.show();
     }
 
+    // detecting a shake
     private final SensorEventListener mSensorListener = new SensorEventListener() {
-
         public void onSensorChanged(SensorEvent se) {
             float x = se.values[0];
             float y = se.values[1];
             float z = se.values[2];
-            mAccelLast = mAccelCurrent;
-            mAccelCurrent = (float) Math.sqrt((double) (x * x + y * y + z * z));
-            float delta = mAccelCurrent - mAccelLast;
-            mAccel = mAccel * 0.9f + delta; // perform low-cut filter
+            accelLast = accelCurrent;
+            accelCurrent = (float) Math.sqrt((double) (x * x + y * y + z * z));
+            float delta = accelCurrent - accelLast;
+            accel = accel * 0.9f + delta; // perform low-cut filter
 
             // if we're shaking
-            if (delta > mThreshold) {
+            if (delta > threshold) {
                 isShaking();
             }
         }
@@ -249,7 +239,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     };
 
     private void toggleFavorite() {
-        ShoppingList list = mdbHelper.getList(currentListOrder);
+        ShoppingList list = dbHelper.getList(currentListOrder);
         if (list.favorite == ShoppingList.FAVORITE) {
             Drawable d = getResources().getDrawable(R.drawable.snowflake_transparent_2);
             favButton.setBackground(d);
@@ -260,17 +250,17 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
             list.favorite = ShoppingList.FAVORITE;
         }
 
-        mdbHelper.updateList(list);
-        mdbHelper.orderLists();
-        ShoppingList newList = mdbHelper.getList(list.title);
+        dbHelper.updateList(list);
+        dbHelper.orderLists();
+        ShoppingList newList = dbHelper.getList(list.title);
         currentListOrder = newList.order;
     }
 
     private void isShaking() {
         Toast.makeText(getApplicationContext(), "let's shuffle it a bit", Toast.LENGTH_LONG).show();
 
-        ShoppingList list = mdbHelper.getList(currentListOrder);
-        mdbHelper.orderListItems(list);
+        ShoppingList list = dbHelper.getList(currentListOrder);
+        dbHelper.orderListItems(list);
         displayListView(currentListOrder);
         refreshView();
     }
@@ -292,8 +282,8 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         //create a list based on the text
         ShoppingList newList = new ShoppingList();
         newList.title = title;
-        mdbHelper.addList(newList);
-        ShoppingList list = mdbHelper.getList(title);
+        dbHelper.addList(newList);
+        ShoppingList list = dbHelper.getList(title);
         currentListOrder = list.order;
 
         displayListView(this.currentListOrder);
@@ -305,24 +295,24 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         //create an item based on the text
         Item newItem = new Item();
         newItem.name = name;
-        newItem.listId = mdbHelper.getList(currentListOrder).id;
+        newItem.listId = dbHelper.getList(currentListOrder).id;
 
-        mdbHelper.addItem(newItem);
+        dbHelper.addItem(newItem);
         refreshView();
     }
 
     private void displayListView(int listOrder) {
         this.currentListOrder = listOrder;
-        ShoppingList list = mdbHelper.getList(this.currentListOrder);
+        ShoppingList list = dbHelper.getList(this.currentListOrder);
         if (list == null) {
             list = new ShoppingList();
             list.title = getString(R.string.new_list_title);
             list.favorite = ShoppingList.UNFAVORITE;
 
-            mdbHelper.addList(list);
+            dbHelper.addList(list);
         }
 
-        Cursor cursor = mdbHelper.fetchAllItems(list);
+        Cursor cursor = dbHelper.fetchAllItems(list);
 
         // data from the database
         String[] columns = new String[]{DBConstants.ItemsCols.NAME};
@@ -332,7 +322,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
         // create the adapter using the cursor pointing to the desired data
         //as well as the layout information
-        mDataAdapter = new ItemAdapter(
+        dataAdapter = new ItemAdapter(
                 this, R.layout.item_info,
                 cursor,
                 columns,
@@ -350,7 +340,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
         });
 
         // Assign adapter to ListView
-        listView.setAdapter(mDataAdapter);
+        listView.setAdapter(dataAdapter);
     }
 
     private void toggleBought(final View view, Cursor cursor, int position) {
@@ -378,7 +368,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
                         }
                     });
         }
-        this.mdbHelper.toggleItem(item);
+        this.dbHelper.toggleItem(item);
         refreshView();
     }
 
@@ -386,20 +376,20 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
     public void onResume() {
         super.onResume();
         displayListView(this.currentListOrder);
-        mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(mSensorListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     public void onFinishAddDialog(String inputText) {
         if (ADD_OBJECT == ITEM_OBJECT) {
-            if (mdbHelper.itemExists(inputText)) {
+            if (dbHelper.itemExists(inputText)) {
                 Toast.makeText(this, "You already have " + inputText, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Added " + inputText, Toast.LENGTH_SHORT).show();
                 addItem(inputText);
             }
         } else if (ADD_OBJECT == LIST_OBJECT) {
-            if (mdbHelper.listExists(inputText)) {
+            if (dbHelper.listExists(inputText)) {
                 Toast.makeText(this, inputText + " already exists", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Started list " + inputText, Toast.LENGTH_SHORT).show();
@@ -409,22 +399,21 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
             Toast.makeText(this, "I can't tell if this is an ITEM or a LIST.", Toast.LENGTH_SHORT).show();
         }
         ADD_OBJECT = DEFAULT_OBJECT;
-//        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
     private void refreshView() {
-        ShoppingList list = mdbHelper.getList(currentListOrder);
+        ShoppingList list = dbHelper.getList(currentListOrder);
         if (list == null) {
             list = new ShoppingList();
             list.title = getString(R.string.new_list_title);
             list.favorite = ShoppingList.UNFAVORITE;
             list.order = 0;
 
-            mdbHelper.addList(list);
+            dbHelper.addList(list);
         }
 
-        Cursor cursor = mdbHelper.fetchAllItems(list);
-        this.mDataAdapter.changeCursor(cursor);
+        Cursor cursor = dbHelper.fetchAllItems(list);
+        this.dataAdapter.changeCursor(cursor);
         if (list.favorite == ShoppingList.FAVORITE) {
             favButton.setBackground(getResources().getDrawable(R.drawable.snowflake));
         } else {
@@ -434,7 +423,7 @@ public class ListsActivity extends FragmentActivity implements AddDialogListener
 
     @Override
     protected void onPause() {
-        mSensorManager.unregisterListener(mSensorListener);
+        sensorManager.unregisterListener(mSensorListener);
         super.onPause();
     }
 }

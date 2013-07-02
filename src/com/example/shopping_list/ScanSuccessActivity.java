@@ -23,21 +23,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
-/**
- * Created with IntelliJ IDEA.
- * User: rthai
- * Date: 6/25/13
- * Time: 1:11 PM
- * To change this template use File | Settings | File Templates.
- */
 public class ScanSuccessActivity extends Activity {
     public static final String KEY = "AIzaSyDpxWLapNipYoZ9SiLTaXCBEL7c_9_DkRI";
-    private ArrayList<String> itemsToAdd;
-
+    protected ArrayList<String> itemsToAdd;
     public static String st = "scan-tag";
-    TextView item_name;
-    String link;
-
+    protected TextView item_name;
+    protected String link;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

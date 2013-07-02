@@ -16,19 +16,12 @@ import com.example.model.ShoppingList;
 
 import java.util.ArrayList;
 
-/**
- * Created with IntelliJ IDEA.
- * User: sizhao
- * Date: 6/30/13
- * Time: 8:41 PM
- * To change this template use File | Settings | File Templates.
- */
 public class ChooseLists extends Activity {
 
-    private SimpleCursorAdapter mDataAdapter;
-    private SQLiteHelper mdbHelper;
-    private ListView listView;
-    private ArrayList<String> itemsList;
+    protected SimpleCursorAdapter dataAdapter;
+    protected SQLiteHelper dbHelper;
+    protected ListView listView;
+    protected ArrayList<String> itemsList;
 
     SparseBooleanArray sparseBooleanArray = new SparseBooleanArray();
 
@@ -43,15 +36,13 @@ public class ChooseLists extends Activity {
         Intent intent = getIntent();
         itemsList = new ArrayList<String>(intent.getStringArrayListExtra(MainActivity.ITEM_INTENT));
 
-        mdbHelper = new SQLiteHelper(this);
+        dbHelper = new SQLiteHelper(this);
 
         displayListView();
-
     }
 
     private void displayListView() {
-
-        Cursor cursor = mdbHelper.fetchAllLists();
+        Cursor cursor = dbHelper.fetchAllLists();
 
         // data from the database
         String[] columns = new String[]{DBConstants.ShoppingListsCols.TITLE};
@@ -61,7 +52,7 @@ public class ChooseLists extends Activity {
 
         // create the adapter using the cursor pointing to the desired data
         //as well as the layout information
-        mDataAdapter = new SimpleCursorAdapter(
+        dataAdapter = new SimpleCursorAdapter(
                 this, R.layout.list_info,
                 cursor,
                 columns,
@@ -82,19 +73,15 @@ public class ChooseLists extends Activity {
         };
 
         // Assign adapter to ListView
-        listView.setAdapter(mDataAdapter);
+        listView.setAdapter(dataAdapter);
     }
 
     public void addToLists(View view) {
-//        int listCount = listView.getCount();
-//        Log.d("listCount: ", listCount + "");
-//        Log.d("chooselists: size of bool array is ", String.valueOf(sparseBooleanArray.size()));
-
         Log.d("chooselists", "clicked the add button");
         for (int i = 0; i < sparseBooleanArray.size(); i++) {
             int key = sparseBooleanArray.keyAt(i);
             if (sparseBooleanArray.get(key)) {
-                ShoppingList list = new ShoppingList(mdbHelper.getList(key));
+                ShoppingList list = new ShoppingList(dbHelper.getList(key));
 
                 Item item = new Item();
                 item.listId = list.id;
@@ -102,8 +89,8 @@ public class ChooseLists extends Activity {
                 for (String name : itemsList) {
                     Log.d("chooselists", "adding " + name + " to the list");
                     item.name = name;
-                    if (!mdbHelper.itemExists(item)) {
-                        mdbHelper.addItem(item);
+                    if (!dbHelper.itemExists(item)) {
+                        dbHelper.addItem(item);
                         Log.d("chooselists", "added " + name + " successfully");
                     }
                 }
@@ -114,6 +101,4 @@ public class ChooseLists extends Activity {
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
     }
-
-
 }

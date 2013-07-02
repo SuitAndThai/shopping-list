@@ -25,12 +25,10 @@ import java.util.concurrent.ExecutionException;
 
 public class RecipesActivity extends Activity {
 
-    private EditText recipeInput;
-    private ListView ingredientsList;
-    private Button addRecipeButton;
-
-    private StableArrayAdapter mAdapter;
-    private ArrayList<String> ingredients;
+    protected EditText recipeInput;
+    protected ListView ingredientsList;
+    protected Button addRecipeButton;
+    protected ArrayList<String> ingredients;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,6 +40,7 @@ public class RecipesActivity extends Activity {
         addRecipeButton = (Button) findViewById(R.id.add_ingredients_button);
         ingredients = new ArrayList<String>();
 
+        // set up soft keyboard for input
         recipeInput.setSingleLine();
         recipeInput.requestFocus();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
@@ -50,7 +49,6 @@ public class RecipesActivity extends Activity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (EditorInfo.IME_ACTION_DONE == actionId) {
-                    // get text
                     String recipe = v.getText().toString();
                     if (!recipe.equals("")) {
                         // form the url
@@ -76,12 +74,7 @@ public class RecipesActivity extends Activity {
                         JSONObject jObject = null;
                         try {
                             jObject = new JSONObject(data);
-                            String totalMatchCount = jObject.getString("totalMatchCount");
                             JSONArray recipeArray = jObject.getJSONArray("matches");
-                            Context context = getApplicationContext();
-
-//                            Toast.makeText(context, "Total Matches = " + totalMatchCount, Toast.LENGTH_SHORT).show();
-
                             String ingredientsString = " ";
                             for (int i = 0; i < recipeArray.length(); i++) {
                                 try {
