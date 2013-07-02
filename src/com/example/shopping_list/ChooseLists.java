@@ -1,5 +1,6 @@
 package com.example.shopping_list;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +8,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
 import com.example.database.DBConstants;
@@ -36,6 +38,9 @@ public class ChooseLists extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.choose_lists);
 
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
         listView = (ListView) findViewById(R.id.choose_list_list_view);
         listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
         final Button addToListButton = (Button) findViewById(R.id.add_to_list_button);
@@ -48,6 +53,19 @@ public class ChooseLists extends Activity {
         displayListView();
 
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+        switch (menuItem.getItemId()) {
+            case android.R.id.home:
+                Intent homeIntent = new Intent(this, MainActivity.class);
+                homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(homeIntent);
+        }
+        return (super.onOptionsItemSelected(menuItem));
+    }
+
+
 
     private void displayListView() {
 
