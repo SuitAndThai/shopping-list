@@ -90,18 +90,19 @@ public class ChooseLists extends Activity {
 //        Log.d("listCount: ", listCount + "");
 //        Log.d("chooselists: size of bool array is ", String.valueOf(sparseBooleanArray.size()));
 
+        Log.d("chooselists", "clicked the add button");
         for (int i = 0; i < sparseBooleanArray.size(); i++) {
-            if (sparseBooleanArray.get(i)) {
-                ShoppingList list = new ShoppingList(mdbHelper.getList(i));
-                Log.d("chooselists", "clicked the add button");
+            int key = sparseBooleanArray.keyAt(i);
+            if (sparseBooleanArray.get(key)) {
+                ShoppingList list = new ShoppingList(mdbHelper.getList(key));
 
                 Item item = new Item();
                 item.listId = list.id;
 
                 for (String name : itemsList) {
                     Log.d("chooselists", "adding " + name + " to the list");
-                    if (!mdbHelper.itemExists(name)) {
-                        item.name = name;
+                    item.name = name;
+                    if (!mdbHelper.itemExists(item)) {
                         mdbHelper.addItem(item);
                         Log.d("chooselists", "added " + name + " successfully");
                     }

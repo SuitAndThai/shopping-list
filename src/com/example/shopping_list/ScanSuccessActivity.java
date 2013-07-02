@@ -112,6 +112,7 @@ public class ScanSuccessActivity extends Activity {
         Log.d("title: ", title);
         Log.d("imageLink: ", imageLink);
 
+        itemsToAdd.add(title);
         new DownloadImage((ImageView) findViewById(R.id.item_image))
                 .execute(imageLink);
     }

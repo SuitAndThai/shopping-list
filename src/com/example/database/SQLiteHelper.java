@@ -143,7 +143,14 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
                 DBConstants.ItemsCols.NAME + "=?", new String[]{String.valueOf(name)}
                 , null, null, DBConstants.ItemsCols.ITEM_ORDER);
+        return cursor.getCount() > 0;
+    }
 
+    public boolean itemExists(Item item) {
+        SQLiteDatabase db = open();
+        Cursor cursor = db.query(DBConstants.ItemsCols.TABLE_NAME, null,
+                DBConstants.ItemsCols.NAME + "=? AND " + DBConstants.ItemsCols._SHOPPING_LIST_ID + " =?", new String[]{item.name, String.valueOf(item.listId)}
+                , null, null, DBConstants.ItemsCols.ITEM_ORDER);
         return cursor.getCount() > 0;
     }
 
