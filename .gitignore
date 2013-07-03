@@ -4,3 +4,24 @@
 *.jar
 *.war
 *.ear
+
+# emacs
+*.~
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+*.apk
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
